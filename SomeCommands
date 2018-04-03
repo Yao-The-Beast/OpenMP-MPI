@@ -1,0 +1,7 @@
+export OMP_NUM_THREADS=1
+srun -n 1 -c 1 ./openmp -p 1 -n 500 -no -s openmp.txt
+
+export MPICH_MAX_THREAD_SAFETY=MPI_THREAD_MULTIPLE
+export OMP_NUM_THREADS=64
+
+module swap PrgEnv-intel PrgEnv-gnu

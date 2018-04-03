@@ -1,0 +1,9 @@
+-----WARM UP COMPLETED-----
+Sync Latency Stats are: 
+Average: 38.555622, Median: 35.047531 
+-----FINISH BUSY RECV SYNC-----
+Async V1 Average Latency is: 1.016903 ms 
+-----FINISH BUSY RECV ASYNC V1-----
+Async V2 Latency Stats are: 
+Average: 0.956273, Median: 0.953674 
+-----FINISH BUSY RECV ASYNC V2-----

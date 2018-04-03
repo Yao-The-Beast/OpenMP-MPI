@@ -1,0 +1,11 @@
+#!/bin/bash -l
+#SBATCH -C haswell
+#SBATCH -p debug 				# change this option for non-debug runs
+#SBATCH -N 1					  # adjust the number of nodes per test (e.g. start with 1, 2, ...)
+#SBATCH -t 00:02:00		  # adjust the amount of time as necessary
+#SBATCH -J auto-mpi
+#SBATCH -o auto-mpi.%j.stdout
+#SBATCH -e auto-mpi.%j.error
+
+srun -N 1 -n 32 ./twoSidedBusySend_Multi_MPIs
+exit
