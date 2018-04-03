@@ -74,7 +74,7 @@ void busy_send_recv_sync_routine(int hisAddress, bool isVerbose, int world_size)
       Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH(timestamps, start_timestamp, end_timestamp, 2 * sizeof(double), BATCH_SIZE);
       printf("Sync Send & Recv Latency Stats are: \n");
       latency_stats_in_microsecond.print();
-      latency_stats_in_microsecond.write_to_csv_file("Output/twoSidedBusySend_Multi_OpenMP_Syn_" + to_string(world_size * NUM_THREADS) + ".txt");
+      latency_stats_in_microsecond.write_to_csv_file("Output/twoSidedBusySend_Multi_OpenMP_Sync_" + to_string(world_size * NUM_THREADS) + ".txt");
     }
 }
 
@@ -118,7 +118,7 @@ void busy_send_recv_async_routine(int hisAddress, bool isVerbose, int world_size
       Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH(timestamps, start_timestamp, end_timestamp, 2 * sizeof(double), BATCH_SIZE);
       printf("Async Send & Recv Latency Stats are: \n");
       latency_stats_in_microsecond.print();
-      latency_stats_in_microsecond.write_to_csv_file("Output/twoSidedBusySend_Multi_OpenMP_Asyn_" + to_string(world_size * NUM_THREADS) + ".txt");
+      latency_stats_in_microsecond.write_to_csv_file("Output/twoSidedBusySend_Multi_OpenMP_Async_" + to_string(world_size * NUM_THREADS) + ".txt");
     }
 }
 
