@@ -11,6 +11,7 @@
 #include <numeric>
 #include <time.h>
 #include <fstream>
+#include <unistd.h>
 #include "omp.h"
 
 using namespace std;
@@ -121,7 +122,20 @@ void OPENMP_SEND_WARMUP(const int NUM_WARMUP_MESSAGES, int sender, int THREAD_LE
 }
 
 //Return a random number [lower, upper]
-int GENERATE_A_RANDOM_NUMBER(int lower, int upper){
+//option: 0 dont really care, -1 odd, 1 even
+int GENERATE_A_RANDOM_NUMBER(int lower, int upper, int option = -1){
   srand (time(NULL));
-  return rand() % (upper - lower + 1) + lower;
+  int candidate = rand() % (upper - lower + 1) + lower;
+  if (option == -1){
+    candidate = max(1, candidate / 2 * 2 - 1);
+  }else if (option == 1){
+    candidate = candidate / 2 * 2;
+  }
+  return candidate;
+}
+
+//Sleep for (base + random(fluctuation)) microseconds
+void USLEEP(int base, int fluctuation){
+  unsigned int totalSleepTime = GENERATE_A_RANDOM_NUMBER(0, fluctuation) + base;
+  usleep(totalSleepTime);
 }
