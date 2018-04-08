@@ -9,8 +9,7 @@ OPENMP = -openmp #Note: this is the flag for Intel compilers. Change this to -fo
 CFLAGS =  -std=c++11 -O3
 LIBS =
 
-TARGETS = oneSidedBusySend \
-		twoSidedBusySend_Multi_MPIs twoSidedBusySend_Multi_OpenMP \
+TARGETS =
 		twoSidedSleepSend_Multi_MPIs twoSidedSleepSend_Multi_OpenMP \
 		fanoutBusy_Multi_MPIs fanoutSleep_Multi_MPIs
 
@@ -18,15 +17,6 @@ TARGETS = oneSidedBusySend \
 all:	$(TARGETS)
 
 # Create Binary Files
-
-oneSidedBusySend: OneSidedBusySend.o
-	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) OneSidedBusySend.o
-
-twoSidedBusySend_Multi_MPIs: TwoSidedBusySend_Multi_MPIs.o
-	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) TwoSidedBusySend_Multi_MPIs.o
-
-twoSidedBusySend_Multi_OpenMP: TwoSidedBusySend_Multi_OpenMP.o
-	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) TwoSidedBusySend_Multi_OpenMP.o
 
 twoSidedSleepSend_Multi_MPIs: TwoSidedSleepSend_Multi_MPIs.o
 	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) TwoSidedSleepSend_Multi_MPIs.o
@@ -42,15 +32,6 @@ fanoutSleep_Multi_MPIs: FanoutSleep_Multi_MPIs.o
 
 
 # Create Object Files
-
-OneSidedBusySend.o: SendRecv/OneSidedBusySend.cpp Lib/HelperFunctions.h
-	$(MPCC) -c $(CFLAGS) $(OPENMP) SendRecv/OneSidedBusySend.cpp Lib/HelperFunctions.h
-
-TwoSidedBusySend_Multi_MPIs.o: SendRecv/TwoSidedBusySend_Multi_MPIs.cpp Lib/HelperFunctions.h
-	$(MPCC) -c $(CFLAGS) $(OPENMP) SendRecv/TwoSidedBusySend_Multi_MPIs.cpp Lib/HelperFunctions.h
-
-TwoSidedBusySend_Multi_OpenMP.o: SendRecv/TwoSidedBusySend_Multi_OpenMP.cpp Lib/HelperFunctions.h
-	$(MPCC) -c $(CFLAGS) $(OPENMP) SendRecv/TwoSidedBusySend_Multi_OpenMP.cpp Lib/HelperFunctions.h
 
 TwoSidedSleepSend_Multi_MPIs.o: SendRecv/TwoSidedSleepSend_Multi_MPIs.cpp Lib/HelperFunctions.h
 	$(MPCC) -c $(CFLAGS) $(OPENMP) SendRecv/TwoSidedSleepSend_Multi_MPIs.cpp Lib/HelperFunctions.h
