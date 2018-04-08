@@ -1,10 +1,3 @@
-/*
-Initiate Multiple MPI processes
-Each process busy sends and busy polls.
-Process id 2i talks to Process id 2i+1
-No synchronization is enforced.
-The process sleeps for a while after each # of BatchSize of (Send & Recv)
-*/
 
 #include <mpi.h>
 #include <stdio.h>
@@ -25,117 +18,104 @@ using namespace std;
 int SLEEP_BASE = 100;
 int SLEEP_FLUCTUATION = 25;
 
-/* ----------- ASYNCHRONOUS ---------- */
-void busy_send_recv_async_routine(int hisAddress, bool isVerbose, int world_size){
-    //the timestamp of the msg I sent
-    double mySent[NUM_ACTUAL_MESSAGES];
-    //the timestamp of the msg he sent to me
-    double hisSent[NUM_ACTUAL_MESSAGES];
-
-    vector<double> timestamps;
-    double recv;
-
-    double start_timestamp = MPI_Wtime();
-
-    int counter = 0;
-    for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
-      // Batch the send and receive operation
-      if (i % BATCH_SIZE == 0 && i != 0){
-        //Receive and Send requests
-        MPI_Request send_requests[BATCH_SIZE];
-        for (int k = 0; k < BATCH_SIZE; k++){
-          //Some porcess send first then recv, others do the reverse
-          //To ensure there is no deadlock
-          if (hisAddress % 2 == 0){
-            mySent[counter] = MPI_Wtime();
-            MPI_Isend(&mySent[counter], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, &send_requests[k]);
-            MPI_Recv(&hisSent[counter], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-          }else{
-            MPI_Recv(&hisSent[counter], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            mySent[counter] = MPI_Wtime();
-            MPI_Isend(&mySent[counter], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, &send_requests[k]);
-          }
-          counter++;
-        }
-        //Calculate latency here
-        recv = MPI_Wtime();
-
-        //Wait for all the sent request to finish
-        MPI_Waitall(BATCH_SIZE, send_requests, MPI_STATUSES_IGNORE);
-
-        timestamps.push_back((recv - hisSent[counter - BATCH_SIZE + 1]) / 2.0);
-        //Do some work here
-        //usleep to simulate work here
-        USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
-      }
-    }
-
-    if (isVerbose){
-      double end_timestamp = MPI_Wtime();
-      //Need to take care of two way communication
-      //So we multiply each message size by 2
-      Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH(timestamps, start_timestamp, end_timestamp, 2 * sizeof(double), BATCH_SIZE);
-      printf("-----------------------------------------\n");
-      printf("Async Send & Recv Latency Stats are: \n");
-      latency_stats_in_microsecond.print();
-      latency_stats_in_microsecond.write_to_csv_file("Output/twoSidedSleepSend_Multi_MPIs_Async_" + to_string(world_size) + ".txt");
-    }
-}
-
 
 /* ----------- SYNCHRONOUS ---------- */
-void busy_send_recv_sync_routine(int hisAddress, bool isVerbose, int world_size){
-    //the timestamp of the msg I sent
+void busy_send_recv_sync_routine(int hisAddress, int myAddress, bool isVerbose, int world_size){
+    //the timestamps
     double mySent[NUM_ACTUAL_MESSAGES];
-    //the timestamp of the msg he sent to me
     double hisSent[NUM_ACTUAL_MESSAGES];
 
-    vector<double> timestamps;
+    vector<double> latencies;
     double recv;
 
     double start_timestamp = MPI_Wtime();
 
-    int counter = 0;
-    for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
-      // Batch the send and receive operation
-      if (i % BATCH_SIZE == 0 && i != 0){
-        //Receive and Send requests
+    for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i += BATCH_SIZE){
+        //Do the batch here
         for (int k = 0; k < BATCH_SIZE; k++){
           //Some porcess send first then recv, others do the reverse
           //To ensure there is no deadlock
-          if (hisAddress % 2 == 0){
-            mySent[counter] = MPI_Wtime();
-            MPI_Send(&mySent[counter], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD);
-            MPI_Recv(&hisSent[counter], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+          if (myAddress % 2 == 1){
+            mySent[i + k] = MPI_Wtime();
+            MPI_Send(&mySent[i + k], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD);
+            MPI_Recv(&hisSent[i + k], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
           }else{
-            MPI_Recv(&hisSent[counter], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            mySent[counter] = MPI_Wtime();
-            MPI_Send(&mySent[counter], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD);
+            MPI_Recv(&hisSent[i + k], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            mySent[i + k] = MPI_Wtime();
+            MPI_Send(&mySent[i + k], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD);
           }
-          counter++;
         }
-        //Calculate latency here
-        recv = MPI_Wtime();
-        timestamps.push_back((recv - hisSent[counter - BATCH_SIZE + 1]) / 2.0);
 
-        //Do some work here
+        //Calculate latency here
+        if (isVerbose && i != 0){
+          recv = MPI_Wtime();
+          latencies.push_back((recv - hisSent[i - BATCH_SIZE + 1]) / 2.0);
+        }
+
         //usleep to simulate work here
         USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
-      }
     }
 
     if (isVerbose){
       double end_timestamp = MPI_Wtime();
       //Need to take care of two way communication
       //So we multiply each message size by 2
-      Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH(timestamps, start_timestamp, end_timestamp, 2 * sizeof(double), BATCH_SIZE);
+      Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
+        latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION, 2 * sizeof(double), BATCH_SIZE, true);
       printf("-----------------------------------------\n");
-      printf("Async Send & Recv Latency Stats are: \n");
+      printf("Sync Send & Recv Latency Stats are: \n");
       latency_stats_in_microsecond.print();
-      latency_stats_in_microsecond.write_to_csv_file("Output/twoSidedSleepSend_Multi_MPIs_Sync_" + to_string(world_size) + ".txt");
+      //latency_stats_in_microsecond.write_to_csv_file("Output/twoSidedSleepSend_Multi_MPIs_Sync_" + to_string(world_size) + ".txt");
     }
 }
 
+
+/* ----------- ASYNCHRONOUS ---------- */
+void busy_send_recv_async_routine(int hisAddress, int myAddress, bool isVerbose, int world_size){
+    //timestamp
+    double mySent[NUM_ACTUAL_MESSAGES];
+    double hisSent[NUM_ACTUAL_MESSAGES];
+
+    vector<double> latencies;
+    double recv;
+    MPI_Request sendRequests[BATCH_SIZE];
+    MPI_Request recvRequests[BATCH_SIZE];
+
+    double start_timestamp = MPI_Wtime();
+
+    for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i += BATCH_SIZE){
+        //Do the batch here
+        for (int k = 0; k < BATCH_SIZE; k++){
+          mySent[i + k] = MPI_Wtime();
+          MPI_Isend(&mySent[i + k], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, &sendRequests[k]);
+          MPI_Irecv(&hisSent[i + k], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, &recvRequests[k]);
+        }
+        //Wait for the request to finish
+        MPI_Waitall(BATCH_SIZE, sendRequests, MPI_STATUSES_IGNORE);
+        MPI_Waitall(BATCH_SIZE, recvRequests, MPI_STATUSES_IGNORE);
+
+        //Calculate latency here
+        if (isVerbose && i != 0){
+          recv = MPI_Wtime();
+          latencies.push_back((recv - hisSent[i - BATCH_SIZE + 1]) / 2.0);
+        }
+
+        //usleep to simulate work here
+        USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+    }
+
+    if (isVerbose){
+      double end_timestamp = MPI_Wtime();
+      //Need to take care of two way communication
+      //So we multiply each message size by 2
+      Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
+        latencies, start_timestamp, end_timestamp, SLEEP_BASE, 2 * sizeof(double), BATCH_SIZE, true);
+      printf("-----------------------------------------\n");
+      printf("Async Send & Recv Latency Stats are: \n");
+      latency_stats_in_microsecond.print();
+      //latency_stats_in_microsecond.write_to_csv_file("Output/twoSidedSleepSend_Multi_MPIs_Async_" + to_string(world_size) + ".txt");
+    }
+}
 
 int main(int argc, char** argv) {
 
@@ -156,7 +136,6 @@ int main(int argc, char** argv) {
             break;
       }
   }
-
 
   // Initialize the MPI environment
   MPI_Init(NULL, NULL);
@@ -187,21 +166,23 @@ int main(int argc, char** argv) {
     MPI_SEND_WARMUP(NUM_WARMUP_MESSAGES, world_rank - 1);
   }
 
-  //Benchmark Async
-  MPI_Barrier(MPI_COMM_WORLD);
-  if (world_rank % 2 == 0){
-    busy_send_recv_async_routine(world_rank + 1, verboser == world_rank, world_size);
-  }else{
-    busy_send_recv_async_routine(world_rank - 1, verboser == world_rank, world_size);
-  }
-
   //Benchmark Sync
   MPI_Barrier(MPI_COMM_WORLD);
   if (world_rank % 2 == 0){
-    busy_send_recv_sync_routine(world_rank + 1, verboser == world_rank, world_size);
+    busy_send_recv_sync_routine(world_rank + 1, world_rank, verboser == world_rank, world_size);
   }else{
-    busy_send_recv_sync_routine(world_rank - 1, verboser == world_rank, world_size);
+    busy_send_recv_sync_routine(world_rank - 1, world_rank, verboser == world_rank, world_size);
   }
+
+  //Benchmark Async
+  MPI_Barrier(MPI_COMM_WORLD);
+  if (world_rank % 2 == 0){
+    busy_send_recv_async_routine(world_rank + 1, world_rank, verboser == world_rank, world_size);
+  }else{
+    busy_send_recv_async_routine(world_rank - 1, world_rank, verboser == world_rank, world_size);
+  }
+
+
 
   MPI_Finalize();
 }

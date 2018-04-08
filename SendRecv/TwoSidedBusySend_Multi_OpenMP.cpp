@@ -1,9 +1,4 @@
-/*
-Initiate Multiple MPI processes
-Each process busy sends and busy polls.
-Process id 2i talks to Process id 2i+1
-No synchronization is enforced.
-*/
+
 
 #include <mpi.h>
 #include <stdio.h>
@@ -22,7 +17,7 @@ No synchronization is enforced.
 using namespace std;
 
 const int THREAD_LEVEL = MPI_THREAD_MULTIPLE;
-int NUM_THREADS;
+int NUM_THREADS = 1;
 
 /* ----------- SYNCHRONOUS ---------- */
 void busy_send_recv_sync_routine(int hisAddress, int myAddress, bool isVerbose, int world_size){
@@ -90,22 +85,11 @@ void busy_send_recv_async_routine(int hisAddress, int myAddress, bool isVerbose,
 
     start_timestamp = MPI_Wtime();
     for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i += BATCH_SIZE){
-      //Enforce send & recv sequence to make sure there is no deadlock
-      //Only Odd rank put down timestamp
-      if (myAddress % 2 == 1){
-        //Do the batch here
-        for (int k = 0; k < BATCH_SIZE; k++){
-          mySent[i + k] = MPI_Wtime();
-          MPI_Isend(&mySent[i + k], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD, &sendRequests[k]);
-          MPI_Irecv(&hisSent[i + k], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD, &recvRequests[k]);
-        }
-      }else{
-        //Do the batch here
-        for (int k = 0; k < BATCH_SIZE; k++){
-          MPI_Irecv(&hisSent[i + k], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD, &recvRequests[k]);
-          mySent[i + k] = MPI_Wtime();
-          MPI_Isend(&mySent[i + k], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD, &sendRequests[k]);
-        }
+      //Do the batch here
+      for (int k = 0; k < BATCH_SIZE; k++){
+        mySent[i + k] = MPI_Wtime();
+        MPI_Isend(&mySent[i + k], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD, &sendRequests[k]);
+        MPI_Irecv(&hisSent[i + k], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD, &recvRequests[k]);
       }
       //Wait for requests
       MPI_Waitall(BATCH_SIZE, recvRequests, MPI_STATUSES_IGNORE);
@@ -146,7 +130,7 @@ int main(int argc, char** argv) {
             NUM_THREADS = stoi(optarg);
             break;
           case '?':
-            fprintf(stderr, "USAGE:\n -B <BASE> -F <FLUCT> To sleep for BASE + FLUCT miscroseconds \n");
+            fprintf(stderr, "USAGE:\n -T to define number of threads per MPI \n");
             break;
           default:
             abort();

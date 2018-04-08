@@ -24,21 +24,27 @@ struct Stats{
   double median;
   vector<double> data;
   double throughput;
-  Stats(vector<double> data, double average, double median, double throughput){
+  double normalized_throughput;
+
+  Stats(vector<double> data, double average, double median, double throughput, double normalized_throughput){
     this->data = data;
     this->average = average;
     this->median = median;
     this->throughput = throughput;
+    this->normalized_throughput = normalized_throughput;
   }
 
   void print(){
-    printf("Average: %f ms, Median: %f ms, Throughput: %f MB/s \n", average, median, throughput);
+    printf("Average: %f ms, Median: %f ms \nReal Throughput: %f MB/s, Normalized Throughput: %f MB/s\n",
+      average, median, throughput, normalized_throughput);
   }
 
   void write_to_csv_file(string path){
     ofstream myfile;
     myfile.open(path);
     //write the throughput first
+    myfile << normalized_throughput;
+    myfile << "\n";
     myfile << throughput;
     myfile << "\n";
     //write rest of the latency data
@@ -63,9 +69,26 @@ double CALCULATE_THROUGHPUT_BATCH(double start_timestamp, double end_timestamp, 
   return throughput;
 }
 
+//return the theoretical throughput in MB/S
+double TRANSFORM_INTO_NORMALIZED_THROUGHPUT_BATCH(int interval_ms, double start_timestamp, double end_timestamp, int num_messages, int message_size, int batchSize){
+  double time_elapsed = end_timestamp - start_timestamp - interval_ms / 1000.0 * num_messages / 1000.0;
+  double data_size_MB = num_messages * message_size * batchSize / 1024.0 / 1024.0;
+  double throughput = data_size_MB / time_elapsed;
+  return throughput;
+}
+
+//return the theoretical throughput in MB/S
+double CALCULATE_THEORETIC_THROUGHPUT_BATCH(int interval_ms, int message_size, int batchSize, bool isRoundtrip){
+  double multi = 1.0;
+  if (isRoundtrip)
+    multi = 2.0;
+  double throughput = message_size * batchSize * multi * 1.0 / interval_ms * 1000.0 / 1024.0 / 1024.0 * 1000.0;
+  return throughput;
+}
+
 //Return the stats based on the input vector<double>
 Stats CALCULATE_TIMESTAMP_STATS_BATCH(vector<double> timestamps, double start_timestamp, double end_timestamp,
-  int message_size, int batchSize){
+    int message_size, int batchSize){
   for (auto it = timestamps.begin(); it != timestamps.end(); it++){
     (*it) = (*it) / batchSize;
   }
@@ -73,10 +96,26 @@ Stats CALCULATE_TIMESTAMP_STATS_BATCH(vector<double> timestamps, double start_ti
   double average = accumulate(timestamps.begin(), timestamps.end(), 0.0) * 1.0 / timestamps.size() * 1000000;
   double median = timestamps[timestamps.size() / 2] * 1000000 ;
   double throughput = CALCULATE_THROUGHPUT_BATCH(start_timestamp, end_timestamp, timestamps.size(), message_size, batchSize);
-  Stats stats(timestamps, average, median, throughput);
+  Stats stats(timestamps, average, median, throughput, throughput);
   return stats;
 }
 
+//Return the stats based on the input vector<double>
+Stats CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(vector<double> timestamps, double start_timestamp, double end_timestamp,
+    int interval_ms, int message_size, int batchSize, bool isRoundtrip){
+  for (auto it = timestamps.begin(); it != timestamps.end(); it++){
+    (*it) = (*it) / batchSize;
+  }
+  sort(timestamps.begin(), timestamps.end());
+  double average = accumulate(timestamps.begin(), timestamps.end(), 0.0) * 1.0 / timestamps.size() * 1000000;
+  double median = timestamps[timestamps.size() / 2] * 1000000 ;
+  double throughput = CALCULATE_THROUGHPUT_BATCH(start_timestamp, end_timestamp, timestamps.size(), message_size, batchSize);
+  //double theoretical_throughput = CALCULATE_THEORETIC_THROUGHPUT_BATCH(interval_ms, message_size, batchSize, isRoundtrip);
+  double normalized_throughput = TRANSFORM_INTO_NORMALIZED_THROUGHPUT_BATCH(interval_ms, start_timestamp, end_timestamp, timestamps.size(), message_size, batchSize);
+  Stats stats(timestamps, average, median, throughput, normalized_throughput);
+  stats.normalized_throughput = normalized_throughput;
+  return stats;
+}
 
 
 //Warmup MPI before doing the actual benchmarking

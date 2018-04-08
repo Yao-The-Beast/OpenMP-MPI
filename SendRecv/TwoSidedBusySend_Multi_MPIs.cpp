@@ -1,9 +1,3 @@
-/*
-Initiate Multiple MPI processes
-Each process busy sends and busy polls.
-Process id 2i talks to Process id 2i+1
-No synchronization is enforced.
-*/
 
 #include <mpi.h>
 #include <stdio.h>
@@ -84,22 +78,13 @@ void busy_send_recv_async_routine(int hisAddress, int myAddress, bool isVerbose,
 
     double start_timestamp = MPI_Wtime();
     for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i+=BATCH_SIZE){
-      //Make sure one process sends and the other receives. Otherwise there will be a block
-      if (myAddress % 2 == 1){
-        //Do the batch here
-        for (int k = 0; k < BATCH_SIZE; k++){
-          mySent[i + k] = MPI_Wtime();
-          MPI_Isend(&mySent[i + k], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, &sendRequests[k]);
-          MPI_Irecv(&hisSent[i + k], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, &recvRequests[k]);
-        }
-      }else{
-        //Do the batch here
-        for (int k = 0; k < BATCH_SIZE; k++){
-          MPI_Irecv(&hisSent[i + k], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, &recvRequests[k]);
-          mySent[i + k] = MPI_Wtime();
-          MPI_Isend(&mySent[i + k], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, &sendRequests[k]);
-        }
+      //Do the batch here
+      for (int k = 0; k < BATCH_SIZE; k++){
+        mySent[i + k] = MPI_Wtime();
+        MPI_Isend(&mySent[i + k], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, &sendRequests[k]);
+        MPI_Irecv(&hisSent[i + k], 1, MPI_DOUBLE, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, &recvRequests[k]);
       }
+
       //Wait for the non-blocking calls to complete
       MPI_Waitall(BATCH_SIZE, sendRequests, MPI_STATUSES_IGNORE);
       MPI_Waitall(BATCH_SIZE, recvRequests, MPI_STATUSES_IGNORE);
