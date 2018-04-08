@@ -18,13 +18,13 @@ No synchronization is enforced.
 #define NUM_WARMUP_MESSAGES 50000
 #define BATCH_SIZE 5
 #define BUSY_SEND_RECV_TAG 2
-#define SLEEP_BASE 100
-#define SLEEP_FLUCTUATION 25
 
 using namespace std;
 
 const int THREAD_LEVEL = MPI_THREAD_MULTIPLE;
-int NUM_THREADS;
+int NUM_THREADS = 1;
+int SLEEP_BASE = 100;
+int SLEEP_FLUCTUATION = 25;
 
 /* ----------- SYNCHRONOUS ---------- */
 void busy_send_recv_sync_routine(int hisAddress, bool isVerbose, int world_size){
@@ -148,12 +148,27 @@ void busy_send_recv_async_routine(int hisAddress, bool isVerbose, int world_size
 
 int main(int argc, char** argv) {
 
-  if (argc <= 1){
-    cerr << "NEED TO INPUT # Of OMP THREADS PER MPI" << endl;
-    return 0;
+  //Porcess Arguments
+  int opt;
+  while ((opt = getopt(argc,argv,":B:F:T:d")) != EOF){
+      switch(opt)
+      {
+          case 'B':
+            SLEEP_BASE = stoi(optarg);
+            break;
+          case 'F':
+            SLEEP_FLUCTUATION = stoi(optarg);
+            break;
+          case 'T':
+            NUM_THREADS = stoi(optarg);
+            break;
+          case '?':
+            fprintf(stderr, "USAGE:\n -B <BASE> -F <FLUCT> To sleep for BASE + FLUCT miscroseconds \n");
+            break;
+          default:
+            abort();
+      }
   }
-
-  NUM_THREADS = atoi(argv[1]);
 
   // Initialize the MPI environment
   int provided, claimed;
@@ -183,6 +198,8 @@ int main(int argc, char** argv) {
   {
     int tid = omp_get_thread_num();
     if (tid == verboser_thread && world_rank == verboser_rank){
+      printf("----------------------------------\nArguments are: \n");
+      printf("BASE %d FLUCTUATION %d THREADS %d \n", SLEEP_BASE, SLEEP_FLUCTUATION, NUM_THREADS);
       cout << "Verboser is " << verboser_rank << " " << verboser_thread << endl;
       cout << "Number of threads " <<  omp_get_num_threads() << endl;
     }

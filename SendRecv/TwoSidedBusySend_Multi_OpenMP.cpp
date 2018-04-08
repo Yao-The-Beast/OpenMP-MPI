@@ -25,7 +25,7 @@ const int THREAD_LEVEL = MPI_THREAD_MULTIPLE;
 int NUM_THREADS;
 
 /* ----------- SYNCHRONOUS ---------- */
-void busy_send_recv_sync_routine(int hisAddress, bool isVerbose, int world_size){
+void busy_send_recv_sync_routine(int hisAddress, int myAddress, bool isVerbose, int world_size){
     //the timestamp of the msg I sent
     double mySent[NUM_ACTUAL_MESSAGES];
     //the timestamp of the msg he sent to me
@@ -36,34 +36,29 @@ void busy_send_recv_sync_routine(int hisAddress, bool isVerbose, int world_size)
     double start_timestamp, end_timestamp;
     int tag = BUSY_SEND_RECV_TAG * 100 + omp_get_thread_num();
 
-    for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
+    start_timestamp = MPI_Wtime();
+    for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i += BATCH_SIZE){
       //Enforce send & recv sequence to make sure there is no deadlock
-      if (hisAddress % 2 == 0){
-        mySent[i] = MPI_Wtime();
-        MPI_Send(&mySent[i], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD);
-        MPI_Recv(&hisSent[i], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        //Set the start timestamp when we receive the first message
-        if (i == 0){
-          start_timestamp = MPI_Wtime();
-        }
+      //Only Odd rank put down timestamp
+      if (myAddress % 2 == 1){
         //Do the batch here
-        if (i % BATCH_SIZE == 0 && i != 0){
-          recv = MPI_Wtime();
-          timestamps.push_back((recv - hisSent[i - BATCH_SIZE + 1]) / 2.0);
+        for (int k = 0; k < BATCH_SIZE; k++){
+          mySent[i + k] = MPI_Wtime();
+          MPI_Send(&mySent[i + k], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD);
+          MPI_Recv(&hisSent[i + k], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
       }else{
-        MPI_Recv(&hisSent[i], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        //Set the start timestamp when we receive the first message
-        if (i == 0){
-          start_timestamp = MPI_Wtime();
-        }
         //Do the batch here
-        if (i % BATCH_SIZE == 0 && i != 0){
-          recv = MPI_Wtime();
-          timestamps.push_back((recv - hisSent[i - BATCH_SIZE + 1]) / 2.0);
+        for (int k = 0; k < BATCH_SIZE; k++){
+          MPI_Recv(&hisSent[i + k], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+          mySent[i + k] = MPI_Wtime();
+          MPI_Send(&mySent[i + k], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD);
         }
-        mySent[i] = MPI_Wtime();
-        MPI_Send(&mySent[i], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD);
+      }
+      //Put down timestamp
+      if (isVerbose && i != 0){
+        recv = MPI_Wtime();
+        timestamps.push_back((recv - hisSent[i - BATCH_SIZE + 1]) / 2.0);
       }
     }
 
@@ -78,38 +73,50 @@ void busy_send_recv_sync_routine(int hisAddress, bool isVerbose, int world_size)
     }
 }
 
-
-
 /* ----------- ASYNCHRONOUS ---------- */
-void busy_send_recv_async_routine(int hisAddress, bool isVerbose, int world_size){
+void busy_send_recv_async_routine(int hisAddress, int myAddress, bool isVerbose, int world_size){
     //the timestamp of the msg I sent
     double mySent[NUM_ACTUAL_MESSAGES];
     //the timestamp of the msg he sent to me
     double hisSent[NUM_ACTUAL_MESSAGES];
 
-    MPI_Request send_requests[NUM_ACTUAL_MESSAGES];
+    MPI_Request sendRequests[BATCH_SIZE];
+    MPI_Request recvRequests[BATCH_SIZE];
+
     vector<double> timestamps;
     double recv;
     double start_timestamp, end_timestamp;
     int tag = BUSY_SEND_RECV_TAG * 100 + omp_get_thread_num();
 
-    for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
-      mySent[i] = MPI_Wtime();
-      MPI_Isend(&mySent[i], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD, &send_requests[i]);
-      MPI_Recv(&hisSent[i], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-      //Set the start timestamp when we receive the first message
-      if (i == 0){
-        start_timestamp = MPI_Wtime();
+    start_timestamp = MPI_Wtime();
+    for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i += BATCH_SIZE){
+      //Enforce send & recv sequence to make sure there is no deadlock
+      //Only Odd rank put down timestamp
+      if (myAddress % 2 == 1){
+        //Do the batch here
+        for (int k = 0; k < BATCH_SIZE; k++){
+          mySent[i + k] = MPI_Wtime();
+          MPI_Isend(&mySent[i + k], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD, &sendRequests[k]);
+          MPI_Irecv(&hisSent[i + k], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD, &recvRequests[k]);
+        }
+      }else{
+        //Do the batch here
+        for (int k = 0; k < BATCH_SIZE; k++){
+          MPI_Irecv(&hisSent[i + k], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD, &recvRequests[k]);
+          mySent[i + k] = MPI_Wtime();
+          MPI_Isend(&mySent[i + k], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD, &sendRequests[k]);
+        }
       }
+      //Wait for requests
+      MPI_Waitall(BATCH_SIZE, recvRequests, MPI_STATUSES_IGNORE);
+      MPI_Waitall(BATCH_SIZE, sendRequests, MPI_STATUSES_IGNORE);
 
-      //Do the batch here
-      if (i % BATCH_SIZE == 0 && i != 0){
+      //Put down timestamp
+      if (isVerbose && i != 0){
         recv = MPI_Wtime();
         timestamps.push_back((recv - hisSent[i - BATCH_SIZE + 1]) / 2.0);
       }
     }
-    MPI_Waitall(NUM_ACTUAL_MESSAGES, send_requests, MPI_STATUSES_IGNORE);
 
     if (isVerbose){
       end_timestamp = MPI_Wtime();
@@ -123,40 +130,6 @@ void busy_send_recv_async_routine(int hisAddress, bool isVerbose, int world_size
 }
 
 
-/* ----------- ASYNCHRONOUS V2 ---------- */
-//Use Isend & Irecv
-void busy_send_recv_async_routine_V2(int hisAddress, bool isVerbose, int world_size){
-    //the timestamp of the msg I sent
-    double mySent[NUM_ACTUAL_MESSAGES];
-    //the timestamp of the msg he sent to me
-    double hisSent[NUM_ACTUAL_MESSAGES];
-
-    MPI_Request send_requests[NUM_ACTUAL_MESSAGES];
-    MPI_Request recv_requests[NUM_ACTUAL_MESSAGES];
-    double recv;
-    double start_timestamp, end_timestamp;
-
-    int tag = BUSY_SEND_RECV_TAG * 100 + omp_get_thread_num();
-
-    start_timestamp = MPI_Wtime();
-    for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
-      mySent[i] = MPI_Wtime();
-      MPI_Isend(&mySent[i], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD, &send_requests[i]);
-      MPI_Irecv(&hisSent[i], 1, MPI_DOUBLE, hisAddress, tag, MPI_COMM_WORLD, &recv_requests[i]);
-    }
-    MPI_Waitall(NUM_ACTUAL_MESSAGES, send_requests, MPI_STATUSES_IGNORE);
-    MPI_Waitall(NUM_ACTUAL_MESSAGES, recv_requests, MPI_STATUSES_IGNORE);
-
-    if (isVerbose){
-      end_timestamp = MPI_Wtime();
-      double time_elapsed = end_timestamp - start_timestamp;
-      uint64_t dataSize = sizeof(double) * NUM_ACTUAL_MESSAGES;
-      double throughput = dataSize / time_elapsed / 1024.0 / 1024.0;
-      printf("Async V2 throughput is %f MB/s \n", throughput);
-    }
-}
-
-
 int main(int argc, char** argv) {
 
   if (argc <= 1){
@@ -164,7 +137,21 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  NUM_THREADS = atoi(argv[1]);
+  //Porcess Arguments
+  int opt;
+  while ((opt = getopt(argc,argv,":T:d")) != EOF){
+      switch(opt)
+      {
+          case 'T':
+            NUM_THREADS = stoi(optarg);
+            break;
+          case '?':
+            fprintf(stderr, "USAGE:\n -B <BASE> -F <FLUCT> To sleep for BASE + FLUCT miscroseconds \n");
+            break;
+          default:
+            abort();
+      }
+  }
 
   // Initialize the MPI environment
   int provided, claimed;
@@ -185,7 +172,9 @@ int main(int argc, char** argv) {
     MPI_Abort(MPI_COMM_WORLD, 1);
   }
 
+  //Choose a random thread
   int verboser_thread = GENERATE_A_RANDOM_NUMBER(0, NUM_THREADS - 1, 0);
+  //Choose an odd id MPI
   int verboser_rank = GENERATE_A_RANDOM_NUMBER(0,world_size - 1);
 
   omp_set_num_threads(NUM_THREADS);
@@ -207,26 +196,19 @@ int main(int argc, char** argv) {
       OPENMP_SEND_WARMUP(NUM_WARMUP_MESSAGES, world_rank - 1, THREAD_LEVEL);
     }
 
-    //Use Send & Recv
+    //Sync
     if (world_rank % 2 == 0){
-      busy_send_recv_sync_routine(world_rank + 1, verboser_rank == world_rank && verboser_thread == tid, world_size);
+      busy_send_recv_sync_routine(world_rank + 1, world_rank, verboser_rank == world_rank && verboser_thread == tid, world_size);
     }else{
-      busy_send_recv_sync_routine(world_rank - 1, verboser_rank == world_rank && verboser_thread == tid, world_size);
+      busy_send_recv_sync_routine(world_rank - 1, world_rank, verboser_rank == world_rank && verboser_thread == tid, world_size);
     }
 
-    //Use Isend & Recv
+    //Async
     if (world_rank % 2 == 0){
-      busy_send_recv_async_routine(world_rank + 1, verboser_rank == world_rank && verboser_thread == tid, world_size);
+      busy_send_recv_async_routine(world_rank + 1, world_rank, verboser_rank == world_rank && verboser_thread == tid, world_size);
     }else{
-      busy_send_recv_async_routine(world_rank - 1, verboser_rank == world_rank && verboser_thread == tid, world_size);
+      busy_send_recv_async_routine(world_rank - 1, world_rank, verboser_rank == world_rank && verboser_thread == tid, world_size);
     }
-
-    //Use Isend & Irecv, with waitall
-    // if (world_rank % 2 == 0){
-    //   busy_send_recv_async_routine_V2(world_rank + 1, verboser_rank == world_rank && verboser_thread == tid, world_size);
-    // }else{
-    //   busy_send_recv_async_routine_V2(world_rank - 1, verboser_rank == world_rank && verboser_thread == tid, world_size);
-    // }
   }
 
   MPI_Finalize();

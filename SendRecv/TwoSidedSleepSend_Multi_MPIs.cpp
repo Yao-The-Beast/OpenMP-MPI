@@ -19,10 +19,11 @@ The process sleeps for a while after each # of BatchSize of (Send & Recv)
 #define NUM_WARMUP_MESSAGES 50000
 #define BUSY_SEND_RECV_TAG 1
 #define BATCH_SIZE 5
-#define SLEEP_BASE 100
-#define SLEEP_FLUCTUATION 25
 
 using namespace std;
+
+int SLEEP_BASE = 100;
+int SLEEP_FLUCTUATION = 25;
 
 /* ----------- ASYNCHRONOUS ---------- */
 void busy_send_recv_async_routine(int hisAddress, bool isVerbose, int world_size){
@@ -116,7 +117,7 @@ void busy_send_recv_sync_routine(int hisAddress, bool isVerbose, int world_size)
         //Calculate latency here
         recv = MPI_Wtime();
         timestamps.push_back((recv - hisSent[counter - BATCH_SIZE + 1]) / 2.0);
-        
+
         //Do some work here
         //usleep to simulate work here
         USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
@@ -138,6 +139,25 @@ void busy_send_recv_sync_routine(int hisAddress, bool isVerbose, int world_size)
 
 int main(int argc, char** argv) {
 
+  int opt;
+  while ((opt = getopt(argc,argv,":B:F:d")) != EOF){
+      switch(opt)
+      {
+          case 'B':
+            SLEEP_BASE = stoi(optarg);
+            break;
+          case 'F':
+            SLEEP_FLUCTUATION = stoi(optarg);
+            break;
+          case '?':
+            fprintf(stderr, "USAGE:\n -B <BASE> -F <FLUCT> To sleep for BASE + FLUCT miscroseconds \n");
+            break;
+          default:
+            break;
+      }
+  }
+
+
   // Initialize the MPI environment
   MPI_Init(NULL, NULL);
   // Find out rank, size
@@ -154,6 +174,8 @@ int main(int argc, char** argv) {
 
   int verboser = GENERATE_A_RANDOM_NUMBER(0, world_size - 1);
   if (world_rank == verboser){
+    printf("----------------------------------\nArguments are: \n");
+    printf("BASE %d FLUCTUATION %d \n", SLEEP_BASE, SLEEP_FLUCTUATION);
     printf("Verboser is %d \n", verboser);
   }
 
