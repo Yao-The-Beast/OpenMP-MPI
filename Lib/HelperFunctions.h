@@ -69,7 +69,7 @@ double CALCULATE_THROUGHPUT_BATCH(double start_timestamp, double end_timestamp, 
   return throughput;
 }
 
-//return the theoretical throughput in MB/S
+//return the normalized throughput in MB/S
 double TRANSFORM_INTO_NORMALIZED_THROUGHPUT_BATCH(int interval_ms, double start_timestamp, double end_timestamp, int num_messages, int message_size, int batchSize){
   double time_elapsed = end_timestamp - start_timestamp - interval_ms / 1000.0 * num_messages / 1000.0;
   double data_size_MB = num_messages * message_size * batchSize / 1024.0 / 1024.0;

@@ -9,9 +9,8 @@ OPENMP = -openmp #Note: this is the flag for Intel compilers. Change this to -fo
 CFLAGS =  -std=c++11 -O3
 LIBS =
 
-TARGETS =
-		twoSidedSleepSend_Multi_MPIs twoSidedSleepSend_Multi_OpenMP \
-		fanoutBusy_Multi_MPIs fanoutSleep_Multi_MPIs
+TARGETS = twoSidedSleepSend_Multi_MPIs twoSidedSleepSend_Multi_OpenMP \
+					fanoutBusy_Multi_MPIs fanoutSleep_Multi_MPIs
 
 
 all:	$(TARGETS)

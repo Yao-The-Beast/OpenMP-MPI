@@ -61,7 +61,7 @@ void busy_send_recv_sync_routine(int hisAddress, int myAddress, bool isVerbose, 
       //Need to take care of two way communication
       //So we multiply each message size by 2
       Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
-        latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION, 2 * sizeof(double), BATCH_SIZE, true);
+        latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2, 2 * sizeof(double), BATCH_SIZE, true);
       printf("-----------------------------------------\n");
       printf("Sync Send & Recv Latency Stats are: \n");
       latency_stats_in_microsecond.print();
@@ -109,7 +109,7 @@ void busy_send_recv_async_routine(int hisAddress, int myAddress, bool isVerbose,
       //Need to take care of two way communication
       //So we multiply each message size by 2
       Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
-        latencies, start_timestamp, end_timestamp, SLEEP_BASE, 2 * sizeof(double), BATCH_SIZE, true);
+        latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2, 2 * sizeof(double), BATCH_SIZE, true);
       printf("-----------------------------------------\n");
       printf("Async Send & Recv Latency Stats are: \n");
       latency_stats_in_microsecond.print();
