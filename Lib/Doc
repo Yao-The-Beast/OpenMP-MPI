@@ -19,10 +19,15 @@ HelperFunctions2.h
     Each MPI process only has one MailRoom
 
   SELF_DEFINED_SCATTER:
+    Overview:
+      Assume 5 MPIs, each with 10 threads
+      Sender send data that is destined for that world to each postman (5 postman in total)
+      Each postman split the data into 10 chunks and put each chunk into a mailbox (Each mailroom contains 10 mailboxes in total)
+      Each thread poll the mail from its mailbox
     Sender Routine:
       Master sends all the messages that are to be sent to that world(MPI) to that world's postman.
     Postman Routine
       After postman receives the messages from the sender,
-        it will put the messages into the correpsonding mailBoxes in the mailRoom
+        it will put the messages into the corresponding mailBoxes in the mailRoom
     Normal Routine
-      All the threads in all the worlds will try to fetch mails from their own mailBoxes
+      All the threads in each world will try to fetch mails from their own mailBoxes from each world's mailRoom

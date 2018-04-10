@@ -1,0 +1,59 @@
+Scatter with Sleep:
+  0. Overview:
+    1. Show the throughput performance of the collective operation scatter with pure MPI and hybrid MPI with OpenMP
+    2. Implement multi-thread scatter due to the zero support from MPI
+
+  1. Results:
+    1. MPI_Scatter has a lower normalized throughput (receiver side) when the number of receivers goes up. (expected)
+    2. Under pure MPI situation, Use Isend instead of MPI_Scatter actually yields much better throughput. (unexpected)
+        (see function busy_scatter_async_isend_routine)
+    3. Under Hybrid Model, the naive scatter has worse throughput than the MPI_Scatter as multiple threads contending
+        for MPI handles (expected and we have seen this in P2P experiments)
+    4. Under Hybrid Model, the MailRoom scatter has much better throughput than the naive one as we use shared memory to
+        minimize communication overhead (expected, yet more experiments are needed)
+    5. The message size has a great influence on our MailRoom scatter performance.
+        When the message size is small, our method significantly outrun the naive one with 4 folds.
+        Yet when the message size is large, we even underperform.
+        One possible reason is that the processor memory is a bottleneck as the MailRoom might contain too much data to
+          be completely stored within the memory. (unexpected)
+
+  2. Scatter Detail
+    1. Due to the constraints of MPI_Scatter as it can only scatter message to each MPI (not the threads within one MPI),
+        We have to write our own implementation of Multi-thread scatter
+    2. There are two Scatter implementations
+        1. Naive:
+            The sender (one OpenMP thread) use Isend / Send to send each piece of message to others
+            The receivers (rest of the OpenMP threads) use Irecv / Recv to receive the message from the sender
+            ---------------------
+            Algorithm:
+              for each iteration:
+                //Sender Side
+                for each receiver:
+                  MPI_Send msg to the receiver
+                end;
+
+                //Receivers Side
+                MPI_Recv msg from the sender
+              end;
+            ---------------------
+
+        2. MailRoom-MailBox implementation
+            See Lib/Doc for more detail
+            ---------------------
+            Algorithm:
+              for each iteration:
+                //Sender Side
+                for each world
+                  MPI_Send all the messages related to that world to the postman in that world
+                end;
+
+                //Postman Side
+                MPI_Recv message from the sender
+                Split message into k chunks (k = # of threads spawned by each MPI)
+                for each thread i:
+                  mailRoom.putMail(message[i], i, sender_info);
+                end;
+
+                //Receiver Side, receiver i
+                mailRoom.fetchMail(i, recvBuffer);
+              ---------------------

@@ -1,4 +1,4 @@
-1. One Sided Send & Recv with Sleep (P2P)
+1. P2P One Sided Send & Recv with Sleep (P2P)
 
     0. Goal
         1. Show the hybrid model of OpenMPs with MPIs has a much worse performance (in terms of normalized throughput) in comparison
