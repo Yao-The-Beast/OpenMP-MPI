@@ -13,6 +13,9 @@
 #include <fstream>
 #include <unistd.h>
 #include "omp.h"
+#include <chrono>
+#include <thread>
+#include <mutex>
 
 using namespace std;
 
@@ -56,6 +59,7 @@ struct Stats{
   }
 };
 
+
 //Get current time in microseconds
 uint64_t NOW_IN_MICROSECOND(){
   return std::chrono::system_clock::now().time_since_epoch() / std::chrono::microseconds(1);
@@ -64,7 +68,7 @@ uint64_t NOW_IN_MICROSECOND(){
 //return the throughput in MB/S
 double CALCULATE_THROUGHPUT_BATCH(double start_timestamp, double end_timestamp, int num_messages, int message_size, int batchSize){
   double time_elapsed = end_timestamp - start_timestamp;
-  double data_size_MB = num_messages * message_size * batchSize / 1024.0 / 1024.0;
+  double data_size_MB = num_messages * (message_size  / 1024.0 / 1024.0) * batchSize ;
   double throughput = data_size_MB / time_elapsed;
   return throughput;
 }
@@ -72,7 +76,7 @@ double CALCULATE_THROUGHPUT_BATCH(double start_timestamp, double end_timestamp, 
 //return the normalized throughput in MB/S
 double TRANSFORM_INTO_NORMALIZED_THROUGHPUT_BATCH(int interval_ms, double start_timestamp, double end_timestamp, int num_messages, int message_size, int batchSize){
   double time_elapsed = end_timestamp - start_timestamp - interval_ms / 1000.0 * num_messages / 1000.0;
-  double data_size_MB = num_messages * message_size * batchSize / 1024.0 / 1024.0;
+  double data_size_MB = num_messages * (message_size  / 1024.0 / 1024.0) * batchSize ;
   double throughput = data_size_MB / time_elapsed;
   return throughput;
 }
@@ -102,7 +106,7 @@ Stats CALCULATE_TIMESTAMP_STATS_BATCH(vector<double> timestamps, double start_ti
 
 //Return the stats based on the input vector<double>
 Stats CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(vector<double> timestamps, double start_timestamp, double end_timestamp,
-    int interval_ms, int message_size, int batchSize, bool isRoundtrip){
+    int interval_ms, int message_size, int batchSize, bool isRoundtrip = false){
   for (auto it = timestamps.begin(); it != timestamps.end(); it++){
     (*it) = (*it) / batchSize;
   }

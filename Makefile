@@ -9,40 +9,40 @@ OPENMP = -openmp #Note: this is the flag for Intel compilers. Change this to -fo
 CFLAGS =  -std=c++11 -O3
 LIBS =
 
-TARGETS = twoSidedSleepSend_Multi_MPIs twoSidedSleepSend_Multi_OpenMP \
-					fanoutBusy_Multi_MPIs fanoutSleep_Multi_MPIs
+TARGETS = P2P_Send_Multi_MPIs P2P_Send_Multi_OpenMP \
+					Scatter_Multi_MPIs Scatter_Multi_OpenMP
 
 
 all:	$(TARGETS)
 
 # Create Binary Files
 
-twoSidedSleepSend_Multi_MPIs: TwoSidedSleepSend_Multi_MPIs.o
-	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) TwoSidedSleepSend_Multi_MPIs.o
+P2P_Send_Multi_MPIs: P2P_Send_Multi_MPIs.o
+	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) P2P_Send_Multi_MPIs.o
 
-twoSidedSleepSend_Multi_OpenMP: TwoSidedSleepSend_Multi_OpenMP.o
-	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) TwoSidedSleepSend_Multi_OpenMP.o
+P2P_Send_Multi_OpenMP: P2P_Send_Multi_OpenMP.o
+	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) P2P_Send_Multi_OpenMP.o
 
-fanoutBusy_Multi_MPIs: FanoutBusy_Multi_MPIs.o
-	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) FanoutBusy_Multi_MPIs.o
+Scatter_Multi_MPIs: Scatter_Multi_MPIs.o
+	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) Scatter_Multi_MPIs.o
 
-fanoutSleep_Multi_MPIs: FanoutSleep_Multi_MPIs.o
-	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) FanoutSleep_Multi_MPIs.o
+Scatter_Multi_OpenMP: Scatter_Multi_OpenMP.o
+	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) Scatter_Multi_OpenMP.o
 
 
 # Create Object Files
 
-TwoSidedSleepSend_Multi_MPIs.o: SendRecv/TwoSidedSleepSend_Multi_MPIs.cpp Lib/HelperFunctions.h
-	$(MPCC) -c $(CFLAGS) $(OPENMP) SendRecv/TwoSidedSleepSend_Multi_MPIs.cpp Lib/HelperFunctions.h
+P2P_Send_Multi_MPIs.o: P2P/P2P_Send_Multi_MPIs.cpp Lib/HelperFunctions.h Lib/HelperFunctions2.h
+	$(MPCC) -c $(CFLAGS) $(OPENMP) P2P/P2P_Send_Multi_MPIs.cpp Lib/HelperFunctions.h Lib/HelperFunctions2.h
 
-TwoSidedSleepSend_Multi_OpenMP.o: SendRecv/TwoSidedSleepSend_Multi_OpenMP.cpp Lib/HelperFunctions.h
-	$(MPCC) -c $(CFLAGS) $(OPENMP) SendRecv/TwoSidedSleepSend_Multi_OpenMP.cpp Lib/HelperFunctions.h
+P2P_Send_Multi_OpenMP.o: P2P/P2P_Send_Multi_OpenMP.cpp Lib/HelperFunctions.h Lib/HelperFunctions2.h
+	$(MPCC) -c $(CFLAGS) $(OPENMP) P2P/P2P_Send_Multi_OpenMP.cpp Lib/HelperFunctions.h Lib/HelperFunctions2.h
 
-FanoutBusy_Multi_MPIs.o: Fanout/FanoutBusy_Multi_MPIs.cpp Lib/HelperFunctions.h
-	$(MPCC) -c $(CFLAGS) $(OPENMP) Fanout/FanoutBusy_Multi_MPIs.cpp Lib/HelperFunctions.h
+Scatter_Multi_MPIs.o: Scatter/Scatter_Multi_MPIs.cpp Lib/HelperFunctions.h Lib/HelperFunctions2.h
+	$(MPCC) -c $(CFLAGS) $(OPENMP) Scatter/Scatter_Multi_MPIs.cpp Lib/HelperFunctions.h Lib/HelperFunctions2.h
 
-FanoutSleep_Multi_MPIs.o: Fanout/FanoutSleep_Multi_MPIs.cpp Lib/HelperFunctions.h
-	$(MPCC) -c $(CFLAGS) $(OPENMP) Fanout/FanoutSleep_Multi_MPIs.cpp Lib/HelperFunctions.h
+Scatter_Multi_OpenMP.o: Scatter/Scatter_Multi_OpenMP.cpp Lib/HelperFunctions.h Lib/HelperFunctions2.h
+	$(MPCC) -c $(CFLAGS) $(OPENMP) Scatter/Scatter_Multi_OpenMP.cpp Lib/HelperFunctions.h Lib/HelperFunctions2.h
 
 clean:
 	rm -f *.o $(TARGETS) *.stdout *.error *.txt
