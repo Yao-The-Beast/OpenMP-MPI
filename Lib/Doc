@@ -1,0 +1,28 @@
+HelperFunctions.h:
+  It contains some helper function to process the timestamps, calculate the throughput, etc.
+
+HelperFunctions2.h
+  It contains two data structures and one self defined scatter function:
+    MailBox
+    MailRoom
+    SELF_DEFINED_SCATTER
+
+  MailBox:
+    It is essential a message queue that follows LIFO.
+    There is a lock to ensure that there is not race condition.
+    fetchMail function is a blocking call. It will not return until the mail box is no longer empty.
+      The blocking is implemented via condition_variable.
+      Besides, a pointer to the user provided receive buffer is required so that the message is copied from the mailbox to the buffer
+
+  MailRoom:
+    It contains up to number of threads per MPI mailboxes
+    Each MPI process only has one MailRoom
+
+  SELF_DEFINED_SCATTER:
+    Sender Routine:
+      Master sends all the messages that are to be sent to that world(MPI) to that world's postman.
+    Postman Routine
+      After postman receives the messages from the sender,
+        it will put the messages into the correpsonding mailBoxes in the mailRoom
+    Normal Routine
+      All the threads in all the worlds will try to fetch mails from their own mailBoxes

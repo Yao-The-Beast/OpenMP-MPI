@@ -61,7 +61,7 @@ void busy_scatter_sync_routine(int my_address, bool isVerbose, int world_size){
     Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
       latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0, sizeof(double) * NUM_DOUBLES, 1, false);
     printf("-----------------------------------------\n");
-    printf("Fanout Sleep Sync Latency is: \n");
+    printf("Scattering Sync Latency is: \n");
     latency_stats_in_microsecond.print();
     //latency_stats_in_microsecond.write_to_csv_file("Output/FanoutSleep_Multi_MPIs_Sync_" + to_string(world_size) + ".txt");
   }
@@ -115,7 +115,66 @@ void busy_scatter_async_routine(int my_address, bool isVerbose, int world_size){
     Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
       latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0, sizeof(double) * NUM_DOUBLES, 1, false);
     printf("-----------------------------------------\n");
-    printf("Fanout Sleep Async Latency is: \n");
+    printf("Scattering Async Latency is: \n");
+    latency_stats_in_microsecond.print();
+    //latency_stats_in_microsecond.write_to_csv_file("Output/FanoutSleep_Multi_MPIs_Sync_" + to_string(world_size) + ".txt");
+  }
+}
+
+//Async using Isend
+void busy_scatter_async_isend_routine(int my_world_rank, bool isVerbose, int world_size){
+
+  vector<double> sendBuffer(NUM_DOUBLES * world_size, 0);
+  vector<double> recvBuffer(NUM_DOUBLES, 0);
+  vector<double> latencies;
+
+  MPI_Request sendRequests[world_size];
+  MPI_Request recvRequest;
+
+  double start_timestamp = MPI_Wtime();
+  //I am the Master who scatters the messages
+  if (my_world_rank == MASTER){
+    for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
+      //Prepare the data
+      for (int j = 0; j < world_size; j++){
+        sendBuffer[j * NUM_DOUBLES + 10] = MPI_Wtime();
+      }
+      //Send to everyone
+      for (int w = 0; w < world_size; w++){
+        int tag = w;
+        MPI_Isend(&sendBuffer[w * NUM_DOUBLES], 1, dt, w, tag, MPI_COMM_WORLD, &sendRequests[w]);
+      }
+      MPI_Irecv(&recvBuffer[0], 1, dt, MASTER, 0, MPI_COMM_WORLD, &recvRequest);
+      //usleep to simulate work here
+      USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+      //Wait for the requests
+      MPI_Waitall(world_size, sendRequests, MPI_STATUSES_IGNORE);
+      MPI_Waitall(1, &recvRequest, MPI_STATUSES_IGNORE);
+    }
+  //I receive messages from the master
+  }else{
+    int tag = my_world_rank;
+    for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
+      //Receive the scattered message
+      MPI_Irecv(&recvBuffer[0], 1, dt, MASTER, tag, MPI_COMM_WORLD, &recvRequest);
+      //usleep to simulate work here
+      USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+      //Wait for the requests
+      MPI_Waitall(1, &recvRequest, MPI_STATUSES_IGNORE);
+      //Calculate the latency
+      if (isVerbose){
+        double recv = MPI_Wtime();
+        latencies.push_back((recv - recvBuffer[10]));
+      }
+    }
+  }
+
+  if (isVerbose){
+    double end_timestamp = MPI_Wtime();
+    Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
+      latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0, sizeof(double) * NUM_DOUBLES, 1, false);
+    printf("-----------------------------------------\n");
+    printf("Scatter Using Isend Latency is: \n");
     latency_stats_in_microsecond.print();
     //latency_stats_in_microsecond.write_to_csv_file("Output/FanoutSleep_Multi_MPIs_Sync_" + to_string(world_size) + ".txt");
   }
@@ -158,7 +217,7 @@ int main(int argc, char** argv) {
   //Create dt datatype
   CREATE_CONTIGUOUS_DATATYPE(dt);
 
-  int verboser = GENERATE_A_RANDOM_NUMBER(1, world_size - 1);
+  int verboser = GENERATE_A_RANDOM_NUMBER(1, world_size - 1, 0);
   if (world_rank == verboser){
     printf("Verboser is %d \n", verboser);
     printf("SLEEP_BASES %d SLEEP_FLUCTUATION %d \n", SLEEP_BASE, SLEEP_FLUCTUATION);
@@ -172,6 +231,10 @@ int main(int argc, char** argv) {
 
   //Async
   busy_scatter_async_routine(world_rank, verboser == world_rank, world_size);
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  //Use Isend instead of Iscatter
+  busy_scatter_async_isend_routine(world_rank, verboser == world_rank, world_size);
   MPI_Barrier(MPI_COMM_WORLD);
 
   MPI_Finalize();
