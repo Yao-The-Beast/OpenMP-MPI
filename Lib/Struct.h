@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
+#include <map>
 #include <algorithm>
 #include <functional>
 #include <numeric>
@@ -96,25 +97,23 @@ struct MailBox{
 
 //The shared data structure we use
 struct MailRoom{
-  vector<MailBox> mailBoxes;
+  map<string, vector<MailBox>> categories;
 
   MailRoom(){};
 
   MailRoom(int numMailBoxes){
-    mailBoxes = vector<MailBox>(numMailBoxes);
+    categories["BROADCAST"] = vector<MailBox>(numMailBoxes);
+    categories["SCATTER"] = vector<MailBox>(numMailBoxes);
+    categories["GATHER"] = vector<MailBox>(numMailBoxes);
   }
 
-  void putMail(vector<double> mail, int whichMailBox, int sender_rank, int sender_tid){
-    mailBoxes[whichMailBox].putMail(mail, sender_rank, sender_tid);
+  void putMail(vector<double> mail, int whichMailBox, int sender_rank, int sender_tid, string operation){
+    categories[operation][whichMailBox].putMail(mail, sender_rank, sender_tid);
   }
 
   //Return <sender_rank, sender_tid>
-  pair<int, int> fetchMail(int whichMailBox, double* recvBuffer){
-    return mailBoxes[whichMailBox].fetchMail(recvBuffer);
-  }
-
-  int size(){
-    return mailBoxes.size();
+  pair<int, int> fetchMail(int whichMailBox, double* recvBuffer, string operation){
+    return categories[operation][whichMailBox].fetchMail(recvBuffer);
   }
 };
 
