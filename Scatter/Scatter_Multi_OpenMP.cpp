@@ -9,10 +9,15 @@ using namespace std;
 #define MASTER_TID 0
 
 const int THREAD_LEVEL = MPI_THREAD_MULTIPLE;
+//Number of messages to be sent to one receive per operation
+const int NUM_MESSAGE_PER_OPERATION = NUM_MESSAGE_PER_RECEIVER;
+const int MESSAGE_SIZE = NUM_DOUBLES;
+
 int NUM_THREADS = 2;
 int SLEEP_BASE = 100;
 int SLEEP_FLUCTUATION = 25;
 int WORLD_SIZE = 1;
+
 
 MPI_Datatype dt;
 MailRoom mailRoom;
@@ -22,8 +27,8 @@ MailRoom mailRoom;
 //Async using Isend
 void scatter_async_regular_routine(int my_rank, int my_tid, bool isVerbose){
 
-  vector<double> sendBuffer(NUM_DOUBLES * WORLD_SIZE * NUM_THREADS, 0);
-  vector<double> recvBuffer(NUM_DOUBLES, 0);
+  vector<double> sendBuffer(MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION * WORLD_SIZE * NUM_THREADS, 0);
+  vector<double> recvBuffer(MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 0);
   vector<double> latencies;
 
   MPI_Request sendRequests[WORLD_SIZE * NUM_THREADS];
@@ -35,16 +40,16 @@ void scatter_async_regular_routine(int my_rank, int my_tid, bool isVerbose){
     for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
       //Prepare the data
       for (int j = 0; j < WORLD_SIZE * NUM_THREADS; j++){
-        sendBuffer[j * NUM_DOUBLES + 10] = MPI_Wtime();
+        sendBuffer[j * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION + 10] = MPI_Wtime();
       }
       //Send to everyone
       int counter = 0;
       for (int w = 0; w < WORLD_SIZE; w++){
         for (int t = 0; t < NUM_THREADS; t++){
-          MPI_Isend(&sendBuffer[counter * NUM_DOUBLES], 1, dt, w, t, MPI_COMM_WORLD, &sendRequests[counter++]);
+          MPI_Isend(&sendBuffer[counter * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION], NUM_MESSAGE_PER_OPERATION, dt, w, t, MPI_COMM_WORLD, &sendRequests[counter++]);
         }
       }
-      MPI_Irecv(&recvBuffer[0], 1, dt, MASTER_RANK, my_tid, MPI_COMM_WORLD, &recvRequest);
+      MPI_Irecv(&recvBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER_RANK, my_tid, MPI_COMM_WORLD, &recvRequest);
       //usleep to simulate work here
       USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
       //Wait for the requests
@@ -55,7 +60,7 @@ void scatter_async_regular_routine(int my_rank, int my_tid, bool isVerbose){
   }else{
     for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
       //Receive the scattered message
-      MPI_Irecv(&recvBuffer[0], 1, dt, MASTER_RANK, my_tid, MPI_COMM_WORLD, &recvRequest);
+      MPI_Irecv(&recvBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER_RANK, my_tid, MPI_COMM_WORLD, &recvRequest);
       //usleep to simulate work here
       USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
       //Wait for the requests
@@ -71,7 +76,8 @@ void scatter_async_regular_routine(int my_rank, int my_tid, bool isVerbose){
   if (isVerbose){
     double end_timestamp = MPI_Wtime();
     Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
-      latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0, sizeof(double) * NUM_DOUBLES, 1, false);
+      latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0,
+      sizeof(double) * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 1, false);
     printf("-----------------------------------------\n");
     printf("Scatter Using Isend Latency is: \n");
     latency_stats_in_microsecond.print();
@@ -81,11 +87,9 @@ void scatter_async_regular_routine(int my_rank, int my_tid, bool isVerbose){
 
 //Async using shared data structure MailRoom
 void scatter_async_self_invented_routine(int my_rank, int my_tid, bool isVerbose){
-  const int num_messages_per_thread = 1;
-  const int message_size = NUM_DOUBLES;
 
-  vector<double> sendBuffer(num_messages_per_thread * message_size * WORLD_SIZE * NUM_THREADS, 0);
-  vector<double> recvBuffer(num_messages_per_thread * message_size, 0);
+  vector<double> sendBuffer(NUM_MESSAGE_PER_OPERATION * MESSAGE_SIZE * WORLD_SIZE * NUM_THREADS, 0);
+  vector<double> recvBuffer(NUM_MESSAGE_PER_OPERATION * MESSAGE_SIZE, 0);
   vector<double> latencies;
 
   //Set postman tid
@@ -100,13 +104,13 @@ void scatter_async_self_invented_routine(int my_rank, int my_tid, bool isVerbose
     if (my_rank == MASTER_RANK && my_tid == MASTER_TID){
       //Prepare the data
       for (int j = 0; j < WORLD_SIZE * NUM_THREADS; j++){
-        sendBuffer[j * message_size * num_messages_per_thread + 10] = MPI_Wtime();
+        sendBuffer[j * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION + 10] = MPI_Wtime();
       }
     }
     //Call the scatter function, option set to send
     SELF_DEFINED_SCATTER(mailRoom,
       &sendBuffer[0], &recvBuffer[0],
-      num_messages_per_thread, message_size, dt,
+      NUM_MESSAGE_PER_OPERATION, MESSAGE_SIZE, dt,
       my_rank, my_tid,
       MASTER_RANK, MASTER_TID,
       postman_tid,
@@ -120,7 +124,7 @@ void scatter_async_self_invented_routine(int my_rank, int my_tid, bool isVerbose
     //Call the scatter function, option set to receive
     SELF_DEFINED_SCATTER(mailRoom,
       &sendBuffer[0], &recvBuffer[0],
-      num_messages_per_thread, message_size, dt,
+      NUM_MESSAGE_PER_OPERATION, MESSAGE_SIZE, dt,
       my_rank, my_tid,
       MASTER_RANK, MASTER_TID,
       postman_tid,
@@ -138,7 +142,8 @@ void scatter_async_self_invented_routine(int my_rank, int my_tid, bool isVerbose
   if (isVerbose){
     double end_timestamp = MPI_Wtime();
     Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
-      latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0, sizeof(double) * NUM_DOUBLES, 1, false);
+      latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0,
+      sizeof(double) * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 1, false);
     printf("-----------------------------------------\n");
     printf("Scatter Using MailRoom Latency is: \n");
     latency_stats_in_microsecond.print();

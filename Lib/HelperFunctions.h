@@ -3,7 +3,6 @@
 using namespace std;
 
 #define WARMUP_TAG 100
-#define NUM_DOUBLES 2048
 
 //Create MPI_Datatype dt to transmit a vector of double
 void CREATE_CONTIGUOUS_DATATYPE(MPI_Datatype& newType, int num_data = NUM_DOUBLES, MPI_Datatype oldType = MPI_DOUBLE){

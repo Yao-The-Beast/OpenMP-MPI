@@ -21,7 +21,7 @@ void SELF_DEFINED_BROADCAST(
     /* ---------- Receive ----------*/
     if (option == 1){
       //Step 3
-      pair<int, int> sender_info = mailRoom.fetchMail(my_tid, recvBuffer);
+      pair<int, int> sender_info = mailRoom.fetchMail(my_tid, recvBuffer, "SCATTER");
       return;
     }
 
@@ -62,7 +62,7 @@ void SELF_DEFINED_BROADCAST(
 
       //Step 2 part 2, Put the message into ech mailbox
       for (int t = 0; t < num_threads; t++){
-        mailRoom.putMail(recvBuffer, t, sender_rank, sender_tid);
+        mailRoom.putMail(recvBuffer, t, sender_rank, sender_tid, "SCATTER");
       }
     }
 }

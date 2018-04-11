@@ -5,20 +5,20 @@
 #define BUSY_SEND_RECV_TAG 1
 #define MASTER 0
 
-//Number of messages to be sent to one receive per operation
-const int NUM_MESSAGE_PER_OPERATION = NUM_MESSAGE_PER_RECEIVER;
-const int MESSAGE_SIZE = NUM_DOUBLES;
-
 int SLEEP_BASE = 100;
 int SLEEP_FLUCTUATION = 1;
 MPI_Datatype dt;
+const int NUM_MESSAGE_PER_OPERATION = NUM_MESSAGE_PER_RECEIVER;
+const int MESSAGE_SIZE = NUM_DOUBLES;
 
 using namespace std;
 
+
+
+
 //Sync
 void busy_scatter_sync_routine(int my_address, bool isVerbose, int world_size){
-  vector<double> sendBuffer(MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION * world_size, 0);
-  vector<double> recvBuffer(MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 0);
+  vector<double> buffer(MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 0);
   vector<double> latencies;
   double start_timestamp, end_timestamp;
 
@@ -28,19 +28,17 @@ void busy_scatter_sync_routine(int my_address, bool isVerbose, int world_size){
   if (my_address == MASTER){
     for (int i = 0; i < NUM_ACTUAL_MESSAGES; i++){
       //initialize send buffer here
-      for (int j = 0; j < world_size; j++){
-        sendBuffer[j * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION + 10] = MPI_Wtime();
-      }
+      sendBuffer[10] = MPI_Wtime();
       //Send the messages
-      MPI_Scatter(&sendBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, &recvBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, MPI_COMM_WORLD);
+      MPI_Bcast(&buffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, MPI_COMM_WORLD);
       //Simulate here
       USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
     }
   //If I am the one who receives the message
   }else{
     for (int i = 0; i < NUM_ACTUAL_MESSAGES; i++){
-      //Receive the message
-      MPI_Scatter(&sendBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, &recvBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, MPI_COMM_WORLD);
+      //Send the messages
+      MPI_Bcast(&buffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, MPI_COMM_WORLD);
       //Put down the timestamp
       if (isVerbose){
         double recv = MPI_Wtime();
@@ -54,8 +52,7 @@ void busy_scatter_sync_routine(int my_address, bool isVerbose, int world_size){
   if (isVerbose){
     end_timestamp = MPI_Wtime();
     Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
-      latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0,
-      sizeof(double) * NUM_MESSAGE_PER_OPERATION * MESSAGE_SIZE, 1, false);
+      latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0, sizeof(double) * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 1, false);
     printf("-----------------------------------------\n");
     printf("Scattering Sync Latency is: \n");
     latency_stats_in_microsecond.print();
@@ -65,8 +62,8 @@ void busy_scatter_sync_routine(int my_address, bool isVerbose, int world_size){
 
 //Async: Iscatter & Iscatter
 void busy_scatter_async_routine(int my_address, bool isVerbose, int world_size){
-  vector<double> sendBuffer(MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION * world_size, 0);
-  vector<double> recvBuffer(MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 0);
+  vector<double> sendBuffer(NUM_DOUBLES * world_size, 0);
+  vector<double> recvBuffer(NUM_DOUBLES, 0);
   vector<double> latencies;
   double start_timestamp, end_timestamp;
 
@@ -80,10 +77,10 @@ void busy_scatter_async_routine(int my_address, bool isVerbose, int world_size){
     for (int i = 0; i < NUM_ACTUAL_MESSAGES; i++){
       //initialize send buffer here
       for (int j = 0; j < world_size; j++){
-        sendBuffer[j * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION + 10] = MPI_Wtime();
+        sendBuffer[j * NUM_DOUBLES + 10] = MPI_Wtime();
       }
       //Send the messages
-      MPI_Iscatter(&sendBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, &recvBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, MPI_COMM_WORLD, &sendRequest);
+      MPI_Iscatter(&sendBuffer[0], 1, dt, &recvBuffer[0], 1, dt, MASTER, MPI_COMM_WORLD, &sendRequest);
       //Simulate here
       USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
       //Wait for the request to finish
@@ -93,7 +90,7 @@ void busy_scatter_async_routine(int my_address, bool isVerbose, int world_size){
   }else{
     for (int i = 0; i < NUM_ACTUAL_MESSAGES; i++){
       //Receive the message
-      MPI_Iscatter(&sendBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, &recvBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, MPI_COMM_WORLD, &recvRequest);
+      MPI_Iscatter(&sendBuffer[0], 1, dt, &recvBuffer[0], 1, dt, MASTER, MPI_COMM_WORLD, &recvRequest);
       //Simulate work here
       USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
       //Wait for the request to finish
@@ -109,8 +106,7 @@ void busy_scatter_async_routine(int my_address, bool isVerbose, int world_size){
   if (isVerbose){
     end_timestamp = MPI_Wtime();
     Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
-      latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0,
-      sizeof(double) * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 1, false);
+      latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0, sizeof(double) * NUM_DOUBLES, 1, false);
     printf("-----------------------------------------\n");
     printf("Scattering Async Latency is: \n");
     latency_stats_in_microsecond.print();
@@ -121,8 +117,8 @@ void busy_scatter_async_routine(int my_address, bool isVerbose, int world_size){
 //Async using Isend
 void busy_scatter_async_isend_routine(int my_world_rank, bool isVerbose, int world_size){
 
-  vector<double> sendBuffer(MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION * world_size, 0);
-  vector<double> recvBuffer(MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 0);
+  vector<double> sendBuffer(NUM_DOUBLES * world_size, 0);
+  vector<double> recvBuffer(NUM_DOUBLES, 0);
   vector<double> latencies;
 
   MPI_Request sendRequests[world_size];
@@ -134,14 +130,14 @@ void busy_scatter_async_isend_routine(int my_world_rank, bool isVerbose, int wor
     for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
       //Prepare the data
       for (int j = 0; j < world_size; j++){
-        sendBuffer[j * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION + 10] = MPI_Wtime();
+        sendBuffer[j * NUM_DOUBLES + 10] = MPI_Wtime();
       }
       //Send to everyone
       for (int w = 0; w < world_size; w++){
         int tag = w;
-        MPI_Isend(&sendBuffer[w * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION], NUM_MESSAGE_PER_OPERATION, dt, w, tag, MPI_COMM_WORLD, &sendRequests[w]);
+        MPI_Isend(&sendBuffer[w * NUM_DOUBLES], 1, dt, w, tag, MPI_COMM_WORLD, &sendRequests[w]);
       }
-      MPI_Irecv(&recvBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, 0, MPI_COMM_WORLD, &recvRequest);
+      MPI_Irecv(&recvBuffer[0], 1, dt, MASTER, 0, MPI_COMM_WORLD, &recvRequest);
       //usleep to simulate work here
       USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
       //Wait for the requests
@@ -153,7 +149,7 @@ void busy_scatter_async_isend_routine(int my_world_rank, bool isVerbose, int wor
     int tag = my_world_rank;
     for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
       //Receive the scattered message
-      MPI_Irecv(&recvBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, tag, MPI_COMM_WORLD, &recvRequest);
+      MPI_Irecv(&recvBuffer[0], 1, dt, MASTER, tag, MPI_COMM_WORLD, &recvRequest);
       //usleep to simulate work here
       USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
       //Wait for the requests
@@ -169,8 +165,7 @@ void busy_scatter_async_isend_routine(int my_world_rank, bool isVerbose, int wor
   if (isVerbose){
     double end_timestamp = MPI_Wtime();
     Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
-      latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0,
-      sizeof(double) * NUM_MESSAGE_PER_OPERATION * MESSAGE_SIZE, 1, false);
+      latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0, sizeof(double) * NUM_DOUBLES, 1, false);
     printf("-----------------------------------------\n");
     printf("Scatter Using Isend Latency is: \n");
     latency_stats_in_microsecond.print();
