@@ -1,13 +1,4 @@
-#include <mpi.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <iostream>
-#include <ctime>
-#include <ratio>
-#include <chrono>
-
-#include "../Lib/HelperFunctions.h"
-#include "../Lib/HelperFunctions2.h"
+#include "../Lib/Lib.h"
 
 #define NUM_ACTUAL_MESSAGES 10000
 #define NUM_WARMUP_MESSAGES 10000

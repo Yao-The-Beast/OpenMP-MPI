@@ -1,13 +1,5 @@
-#include <mpi.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <iostream>
-#include <ctime>
-#include <ratio>
-#include <chrono>
+#include "../Lib/Lib.h"
 
-#include "../Lib/HelperFunctions.h"
-#include "../Lib/HelperFunctions2.h"
 using namespace std;
 
 #define NUM_ACTUAL_MESSAGES 10000
@@ -95,8 +87,10 @@ void scatter_async_self_invented_routine(int my_rank, int my_tid, bool isVerbose
   vector<double> sendBuffer(num_messages_per_thread * message_size * WORLD_SIZE * NUM_THREADS, 0);
   vector<double> recvBuffer(num_messages_per_thread * message_size, 0);
   vector<double> latencies;
+
+  //Set postman tid
   int postman_tid = 1;
-  if (WORLD_SIZE == 0)
+  if (NUM_THREADS == 1)
     postman_tid = 0;
 
   double start_timestamp = MPI_Wtime();
@@ -146,7 +140,7 @@ void scatter_async_self_invented_routine(int my_rank, int my_tid, bool isVerbose
     Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
       latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0, sizeof(double) * NUM_DOUBLES, 1, false);
     printf("-----------------------------------------\n");
-    printf("Scatter Using Isend Latency is: \n");
+    printf("Scatter Using MailRoom Latency is: \n");
     latency_stats_in_microsecond.print();
     //latency_stats_in_microsecond.write_to_csv_file("Output/FanoutSleep_Multi_MPIs_Sync_" + to_string(world_size) + ".txt");
   }

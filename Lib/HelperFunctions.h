@@ -1,68 +1,33 @@
-#include <mpi.h>
-#include <iostream>
-#include <ctime>
-#include <ratio>
-#include <chrono>
-#include <stdlib.h>
-#include <stdio.h>
-#include <vector>
-#include <algorithm>
-#include <functional>
-#include <numeric>
-#include <time.h>
-#include <fstream>
-#include <unistd.h>
-#include "omp.h"
-#include <chrono>
-#include <thread>
-#include <mutex>
+#include "Struct.h"
 
 using namespace std;
 
 #define WARMUP_TAG 100
+#define NUM_DOUBLES 2048
 
-//Stats Structure to store the data and the relevant measurements
-struct Stats{
-  double average;
-  double median;
-  vector<double> data;
-  double throughput;
-  double normalized_throughput;
+//Create MPI_Datatype dt to transmit a vector of double
+void CREATE_CONTIGUOUS_DATATYPE(MPI_Datatype& newType, int num_data = NUM_DOUBLES, MPI_Datatype oldType = MPI_DOUBLE){
+   MPI_Type_contiguous(num_data, oldType, &newType);
+   MPI_Type_commit(&newType);
+}
 
-  Stats(vector<double> data, double average, double median, double throughput, double normalized_throughput){
-    this->data = data;
-    this->average = average;
-    this->median = median;
-    this->throughput = throughput;
-    this->normalized_throughput = normalized_throughput;
+//Return a random number [lower, upper]
+//option: 0 dont really care, -1 odd, 1 even
+int GENERATE_A_RANDOM_NUMBER(int lower, int upper, int option = -1){
+  srand (time(NULL));
+  int candidate = rand() % (upper - lower + 1) + lower;
+  if (option == -1){
+    candidate = max(1, candidate / 2 * 2 - 1);
+  }else if (option == 1){
+    candidate = candidate / 2 * 2;
   }
+  return candidate;
+}
 
-  void print(){
-    printf("Average: %f ms, Median: %f ms \nReal Throughput: %f MB/s, Normalized Throughput: %f MB/s\n",
-      average, median, throughput, normalized_throughput);
-  }
-
-  void write_to_csv_file(string path){
-    ofstream myfile;
-    myfile.open(path);
-    //write the throughput first
-    myfile << normalized_throughput;
-    myfile << "\n";
-    myfile << throughput;
-    myfile << "\n";
-    //write rest of the latency data
-    for (auto it = data.begin(); it != data.end(); it++){
-      myfile << *it;
-      myfile << "\n";
-    }
-    myfile.close();
-  }
-};
-
-
-//Get current time in microseconds
-uint64_t NOW_IN_MICROSECOND(){
-  return std::chrono::system_clock::now().time_since_epoch() / std::chrono::microseconds(1);
+//Sleep for (base + random(fluctuation)) microseconds
+void USLEEP(int base, int fluctuation){
+  unsigned int totalSleepTime = GENERATE_A_RANDOM_NUMBER(0, fluctuation) + base;
+  usleep(totalSleepTime);
 }
 
 //return the throughput in MB/S
@@ -164,21 +129,7 @@ void OPENMP_SEND_WARMUP(const int NUM_WARMUP_MESSAGES, int sender, int THREAD_LE
   }
 }
 
-//Return a random number [lower, upper]
-//option: 0 dont really care, -1 odd, 1 even
-int GENERATE_A_RANDOM_NUMBER(int lower, int upper, int option = -1){
-  srand (time(NULL));
-  int candidate = rand() % (upper - lower + 1) + lower;
-  if (option == -1){
-    candidate = max(1, candidate / 2 * 2 - 1);
-  }else if (option == 1){
-    candidate = candidate / 2 * 2;
-  }
-  return candidate;
-}
-
-//Sleep for (base + random(fluctuation)) microseconds
-void USLEEP(int base, int fluctuation){
-  unsigned int totalSleepTime = GENERATE_A_RANDOM_NUMBER(0, fluctuation) + base;
-  usleep(totalSleepTime);
+//Get current time in microseconds
+uint64_t NOW_IN_MICROSECOND(){
+  return std::chrono::system_clock::now().time_since_epoch() / std::chrono::microseconds(1);
 }

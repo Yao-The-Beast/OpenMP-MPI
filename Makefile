@@ -32,17 +32,17 @@ Scatter_Multi_OpenMP: Scatter_Multi_OpenMP.o
 
 # Create Object Files
 
-P2P_Send_Multi_MPIs.o: P2P/P2P_Send_Multi_MPIs.cpp Lib/HelperFunctions.h Lib/HelperFunctions2.h
-	$(MPCC) -c $(CFLAGS) $(OPENMP) P2P/P2P_Send_Multi_MPIs.cpp Lib/HelperFunctions.h Lib/HelperFunctions2.h
+P2P_Send_Multi_MPIs.o: P2P/P2P_Send_Multi_MPIs.cpp Lib/Lib.h
+	$(MPCC) -c $(CFLAGS) $(OPENMP) P2P/P2P_Send_Multi_MPIs.cpp Lib/Lib.h
 
-P2P_Send_Multi_OpenMP.o: P2P/P2P_Send_Multi_OpenMP.cpp Lib/HelperFunctions.h Lib/HelperFunctions2.h
-	$(MPCC) -c $(CFLAGS) $(OPENMP) P2P/P2P_Send_Multi_OpenMP.cpp Lib/HelperFunctions.h Lib/HelperFunctions2.h
+P2P_Send_Multi_OpenMP.o: P2P/P2P_Send_Multi_OpenMP.cpp Lib/Lib.h
+	$(MPCC) -c $(CFLAGS) $(OPENMP) P2P/P2P_Send_Multi_OpenMP.cpp Lib/Lib.h
 
-Scatter_Multi_MPIs.o: Scatter/Scatter_Multi_MPIs.cpp Lib/HelperFunctions.h Lib/HelperFunctions2.h
-	$(MPCC) -c $(CFLAGS) $(OPENMP) Scatter/Scatter_Multi_MPIs.cpp Lib/HelperFunctions.h Lib/HelperFunctions2.h
+Scatter_Multi_MPIs.o: Scatter/Scatter_Multi_MPIs.cpp Lib/Lib.h
+	$(MPCC) -c $(CFLAGS) $(OPENMP) Scatter/Scatter_Multi_MPIs.cpp Lib/Lib.h
 
-Scatter_Multi_OpenMP.o: Scatter/Scatter_Multi_OpenMP.cpp Lib/HelperFunctions.h Lib/HelperFunctions2.h
-	$(MPCC) -c $(CFLAGS) $(OPENMP) Scatter/Scatter_Multi_OpenMP.cpp Lib/HelperFunctions.h Lib/HelperFunctions2.h
+Scatter_Multi_OpenMP.o: Scatter/Scatter_Multi_OpenMP.cpp Lib/Lib.h
+	$(MPCC) -c $(CFLAGS) $(OPENMP) Scatter/Scatter_Multi_OpenMP.cpp Lib/Lib.h 
 
 clean:
 	rm -f *.o $(TARGETS) *.stdout *.error *.txt

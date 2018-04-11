@@ -1,7 +1,7 @@
 HelperFunctions.h:
   It contains some helper function to process the timestamps, calculate the throughput, etc.
 
-HelperFunctions2.h
+SelfDefinedScatter.h
   It contains two data structures and one self defined scatter function:
     MailBox
     MailRoom
