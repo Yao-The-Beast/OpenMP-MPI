@@ -27,7 +27,7 @@
 using namespace std;
 
 #define NUM_DOUBLES 1024
-#define NUM_MESSAGE_PER_RECEIVER 4;
+#define NUM_MESSAGE_PER_RECEIVER 1;
 
 //Stats Structure to store the data and the relevant measurements
 struct Stats{

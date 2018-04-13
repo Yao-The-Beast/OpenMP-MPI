@@ -9,11 +9,12 @@ using namespace std;
 #define MASTER_TID 0
 
 const int THREAD_LEVEL = MPI_THREAD_MULTIPLE;
+
 //Number of messages to be sent to one receive per operation
 const int NUM_MESSAGE_PER_OPERATION = NUM_MESSAGE_PER_RECEIVER;
 const int MESSAGE_SIZE = NUM_DOUBLES;
 
-int NUM_THREADS = 2;
+int NUM_THREADS = 1;
 int SLEEP_BASE = 100;
 int SLEEP_FLUCTUATION = 25;
 int WORLD_SIZE = 1;

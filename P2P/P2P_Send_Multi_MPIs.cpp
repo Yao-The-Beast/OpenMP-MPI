@@ -8,6 +8,8 @@ using namespace std;
 
 int SLEEP_BASE = 100;
 int SLEEP_FLUCTUATION = 25;
+int NUM_MESSAGE_PER_OPERATION = NUM_MESSAGE_PER_RECEIVER;
+const int MESSAGE_SIZE = NUM_DOUBLES;
 
 MPI_Datatype dt;
 
@@ -15,8 +17,8 @@ MPI_Datatype dt;
 /* ----------- SYNCHRONOUS ---------- */
 void busy_send_recv_sync_routine(int hisAddress, int myAddress, bool isVerbose, int world_size){
     //the timestamps
-    double mySent[NUM_DOUBLES];
-    double hisSent[NUM_DOUBLES];
+    double mySent[MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION];
+    double hisSent[MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION];
 
     vector<double> latencies;
     double recv;
@@ -25,24 +27,24 @@ void busy_send_recv_sync_routine(int hisAddress, int myAddress, bool isVerbose, 
     for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
       //Some send other recieve
       if (myAddress % 2 == 1){
-        mySent[0] = MPI_Wtime();
-        MPI_Send(mySent, 1, dt, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD);
+        mySent[10] = MPI_Wtime();
+        MPI_Send(mySent, NUM_MESSAGE_PER_OPERATION, dt, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD);
       }else{
-        MPI_Recv(hisSent, 1, dt, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(hisSent, NUM_MESSAGE_PER_OPERATION, dt, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       }
       //Calculate latency here
       if (isVerbose){
         recv = MPI_Wtime();
-        latencies.push_back(recv - hisSent[0]);
+        latencies.push_back(recv - hisSent[10]);
       }
-      //usleep to simulate work here
-      USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+      //USLEEP to simulate work here
+      //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
     }
 
     if (isVerbose){
       double end_timestamp = MPI_Wtime();
       Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
-        latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2, sizeof(double) * NUM_DOUBLES, 1, false);
+        latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2, sizeof(double) * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 1, false);
       printf("-----------------------------------------\n");
       printf("Sync Send & Recv Latency Stats are: \n");
       latency_stats_in_microsecond.print();
@@ -50,12 +52,11 @@ void busy_send_recv_sync_routine(int hisAddress, int myAddress, bool isVerbose, 
     }
 }
 
-
 /* ----------- ASYNCHRONOUS ---------- */
 void busy_send_recv_async_routine(int hisAddress, int myAddress, bool isVerbose, int world_size){
     //timestamp
-    double mySent[NUM_DOUBLES];
-    double hisSent[NUM_DOUBLES];
+    double mySent[MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION];
+    double hisSent[MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION];
     vector<double> latencies;
     double recv;
     MPI_Request sendRequest;
@@ -67,14 +68,14 @@ void busy_send_recv_async_routine(int hisAddress, int myAddress, bool isVerbose,
 
         //Some send other recvs
         if (myAddress % 2 == 1){
-          mySent[0] = MPI_Wtime();
-          MPI_Isend(mySent, 1, dt, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, &sendRequest);
+          mySent[10] = MPI_Wtime();
+          MPI_Isend(mySent, NUM_MESSAGE_PER_OPERATION, dt, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, &sendRequest);
         }else{
-          MPI_Irecv(hisSent, 1, dt, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, &recvRequest);
+          MPI_Irecv(hisSent, NUM_MESSAGE_PER_OPERATION, dt, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, &recvRequest);
         }
 
-        //usleep to simulate work here
-        USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+        //USLEEP to simulate work here
+        //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
 
         //Wait for the request to finish
         if (myAddress % 2 == 1)
@@ -85,14 +86,14 @@ void busy_send_recv_async_routine(int hisAddress, int myAddress, bool isVerbose,
         //Calculate latency here
         if (isVerbose){
           recv = MPI_Wtime();
-          latencies.push_back((recv - hisSent[0]));
+          latencies.push_back((recv - hisSent[10]));
         }
     }
 
     if (isVerbose){
       double end_timestamp = MPI_Wtime();
       Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
-        latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2, sizeof(double) * NUM_DOUBLES, 1, false);
+        latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2, sizeof(double) * NUM_MESSAGE_PER_OPERATION * MESSAGE_SIZE, 1, false);
       printf("-----------------------------------------\n");
       printf("Async Send & Recv Latency Stats are: \n");
       latency_stats_in_microsecond.print();
@@ -103,7 +104,7 @@ void busy_send_recv_async_routine(int hisAddress, int myAddress, bool isVerbose,
 int main(int argc, char** argv) {
 
   int opt;
-  while ((opt = getopt(argc,argv,":B:F:d")) != EOF){
+  while ((opt = getopt(argc,argv,":B:F:T:N:d")) != EOF){
       switch(opt)
       {
           case 'B':
@@ -112,11 +113,14 @@ int main(int argc, char** argv) {
           case 'F':
             SLEEP_FLUCTUATION = stoi(optarg);
             break;
+          case 'N':
+            NUM_MESSAGE_PER_OPERATION = stoi(optarg);
+            break;
           case '?':
             fprintf(stderr, "USAGE:\n -B <BASE> -F <FLUCT> To sleep for BASE + FLUCT miscroseconds \n");
             break;
           default:
-            break;
+            abort();
       }
   }
 

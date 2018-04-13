@@ -30,7 +30,7 @@ void broadcast_sync_routine(int my_address, bool isVerbose, int world_size){
       //Send the messages
       MPI_Bcast(&buffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, MPI_COMM_WORLD);
       //Simulate here
-      USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+      //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
     }
   //If I am the one who receives the message
   }else{
@@ -43,7 +43,7 @@ void broadcast_sync_routine(int my_address, bool isVerbose, int world_size){
         latencies.push_back(recv - buffer[10]);
       }
       //Simulate work here
-      USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+      //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
     }
   }
 
@@ -76,7 +76,7 @@ void broadcast_async_routine(int my_address, bool isVerbose, int world_size){
       //Send the messages
       MPI_Ibcast(&buffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, MPI_COMM_WORLD, &sendRequest);
       //Simulate here
-      USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+      //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
       //Wait for the request
       MPI_Waitall(1, &sendRequest, MPI_STATUSES_IGNORE);
     }
@@ -86,7 +86,7 @@ void broadcast_async_routine(int my_address, bool isVerbose, int world_size){
       //Send the messages
       MPI_Ibcast(&buffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, MPI_COMM_WORLD, &recvRequest);
       //Simulate work here
-      USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+      //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
       //Wait for the request
       MPI_Waitall(1, &recvRequest, MPI_STATUSES_IGNORE);
       //Put down the timestamp
@@ -130,8 +130,8 @@ void broadcast_async_isend_routine(int my_world_rank, bool isVerbose, int world_
         MPI_Isend(&sendBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, w, tag, MPI_COMM_WORLD, &sendRequests[w]);
       }
       MPI_Irecv(&recvBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, 0, MPI_COMM_WORLD, &recvRequest);
-      //usleep to simulate work here
-      USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+      ////USLEEP to simulate work here
+      //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
       //Wait for the requests
       MPI_Waitall(world_size, sendRequests, MPI_STATUSES_IGNORE);
       MPI_Waitall(1, &recvRequest, MPI_STATUSES_IGNORE);
@@ -142,8 +142,8 @@ void broadcast_async_isend_routine(int my_world_rank, bool isVerbose, int world_
     for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
       //Receive the scattered message
       MPI_Irecv(&recvBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, tag, MPI_COMM_WORLD, &recvRequest);
-      //usleep to simulate work here
-      USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+      ////USLEEP to simulate work here
+      //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
       //Wait for the requests
       MPI_Waitall(1, &recvRequest, MPI_STATUSES_IGNORE);
       //Calculate the latency
