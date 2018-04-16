@@ -1,12 +1,12 @@
 #include "../Lib/Lib.h"
 
-#define NUM_ACTUAL_MESSAGES 10000
+#define NUM_ACTUAL_MESSAGES 5000
 #define NUM_WARMUP_MESSAGES 10000
 #define BUSY_SEND_RECV_TAG 1
 #define MASTER 0
 
 //Number of messages to be sent to one receive per operation
-const int NUM_MESSAGE_PER_OPERATION = NUM_MESSAGE_PER_RECEIVER;
+int NUM_MESSAGE_PER_OPERATION = NUM_MESSAGE_PER_RECEIVER;
 const int MESSAGE_SIZE = NUM_DOUBLES;
 
 int SLEEP_BASE = 100;
@@ -34,7 +34,7 @@ void busy_scatter_sync_routine(int my_address, bool isVerbose, int world_size){
       //Send the messages
       MPI_Scatter(&sendBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, &recvBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, MPI_COMM_WORLD);
       //Simulate here
-      USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+      //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
     }
   //If I am the one who receives the message
   }else{
@@ -47,7 +47,7 @@ void busy_scatter_sync_routine(int my_address, bool isVerbose, int world_size){
         latencies.push_back(recv - recvBuffer[10]);
       }
       //Simulate work here
-      USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+      //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
     }
   }
 
@@ -85,7 +85,7 @@ void busy_scatter_async_routine(int my_address, bool isVerbose, int world_size){
       //Send the messages
       MPI_Iscatter(&sendBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, &recvBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, MPI_COMM_WORLD, &sendRequest);
       //Simulate here
-      USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+      //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
       //Wait for the request to finish
       MPI_Waitall(1, &sendRequest, MPI_STATUSES_IGNORE);
     }
@@ -95,7 +95,7 @@ void busy_scatter_async_routine(int my_address, bool isVerbose, int world_size){
       //Receive the message
       MPI_Iscatter(&sendBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, &recvBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, MPI_COMM_WORLD, &recvRequest);
       //Simulate work here
-      USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+      //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
       //Wait for the request to finish
       MPI_Waitall(1, &recvRequest, MPI_STATUSES_IGNORE);
       //Put down the timestamp
@@ -139,11 +139,12 @@ void busy_scatter_async_isend_routine(int my_world_rank, bool isVerbose, int wor
       //Send to everyone
       for (int w = 0; w < world_size; w++){
         int tag = w;
-        MPI_Isend(&sendBuffer[w * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION], NUM_MESSAGE_PER_OPERATION, dt, w, tag, MPI_COMM_WORLD, &sendRequests[w]);
+        MPI_Isend(&sendBuffer[w * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION], NUM_MESSAGE_PER_OPERATION,
+          dt, w, tag, MPI_COMM_WORLD, &sendRequests[w]);
       }
       MPI_Irecv(&recvBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, 0, MPI_COMM_WORLD, &recvRequest);
-      //usleep to simulate work here
-      USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+      ////USLEEP to simulate work here
+      //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
       //Wait for the requests
       MPI_Waitall(world_size, sendRequests, MPI_STATUSES_IGNORE);
       MPI_Waitall(1, &recvRequest, MPI_STATUSES_IGNORE);
@@ -154,8 +155,8 @@ void busy_scatter_async_isend_routine(int my_world_rank, bool isVerbose, int wor
     for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
       //Receive the scattered message
       MPI_Irecv(&recvBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, tag, MPI_COMM_WORLD, &recvRequest);
-      //usleep to simulate work here
-      USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+      ////USLEEP to simulate work here
+      //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
       //Wait for the requests
       MPI_Waitall(1, &recvRequest, MPI_STATUSES_IGNORE);
       //Calculate the latency
@@ -181,7 +182,7 @@ void busy_scatter_async_isend_routine(int my_world_rank, bool isVerbose, int wor
 int main(int argc, char** argv) {
   //Porcess Arguments
   int opt;
-  while ((opt = getopt(argc,argv,":B:F:d")) != EOF){
+  while ((opt = getopt(argc,argv,":B:F:N:d")) != EOF){
       switch(opt)
       {
           case 'B':
@@ -189,6 +190,9 @@ int main(int argc, char** argv) {
             break;
           case 'F':
             SLEEP_FLUCTUATION = stoi(optarg);
+            break;
+          case 'N':
+            NUM_MESSAGE_PER_OPERATION = stoi(optarg);
             break;
           case '?':
             fprintf(stderr, "USAGE:\n -B <BASE> -F <FLUCT> To sleep for BASE + FLUCT miscroseconds \n");
@@ -215,11 +219,7 @@ int main(int argc, char** argv) {
   //Create dt datatype
   CREATE_CONTIGUOUS_DATATYPE(dt);
 
-  int verboser = GENERATE_A_RANDOM_NUMBER(1, world_size - 1, 0);
-  if (world_rank == verboser){
-    printf("Verboser is %d \n", verboser);
-    printf("SLEEP_BASES %d SLEEP_FLUCTUATION %d \n", SLEEP_BASE, SLEEP_FLUCTUATION);
-  }
+  int verboser = GENERATE_A_RANDOM_NUMBER(1, world_size - 1, 1);
 
   MPI_Barrier(MPI_COMM_WORLD);
 
@@ -227,9 +227,9 @@ int main(int argc, char** argv) {
   busy_scatter_sync_routine(world_rank, verboser == world_rank, world_size);
   MPI_Barrier(MPI_COMM_WORLD);
 
-  //Async
-  busy_scatter_async_routine(world_rank, verboser == world_rank, world_size);
-  MPI_Barrier(MPI_COMM_WORLD);
+  // //Async
+  // busy_scatter_async_routine(world_rank, verboser == world_rank, world_size);
+  // MPI_Barrier(MPI_COMM_WORLD);
 
   //Use Isend instead of Iscatter
   busy_scatter_async_isend_routine(world_rank, verboser == world_rank, world_size);

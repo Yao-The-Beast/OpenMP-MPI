@@ -1,6 +1,6 @@
 #include "../Lib/Lib.h"
 
-#define NUM_ACTUAL_MESSAGES 10000
+#define NUM_ACTUAL_MESSAGES 5000
 #define NUM_WARMUP_MESSAGES 10000
 #define BUSY_SEND_RECV_TAG 2
 
@@ -43,8 +43,8 @@ void busy_send_recv_sync_routine(int hisAddress, int myAddress, bool isVerbose, 
         latencies.push_back((recv - hisSent[10]));
       }
 
-      //USLEEP to simulate work here
-      USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+      ////USLEEP to simulate work here
+      //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
     }
 
     if (isVerbose){
@@ -83,8 +83,8 @@ void busy_send_recv_async_routine(int hisAddress, int myAddress, bool isVerbose,
         MPI_Irecv(&hisSent, NUM_MESSAGE_PER_OPERATION, dt, hisAddress, tag, MPI_COMM_WORLD, &recvRequest);
       }
 
-      //USLEEP to simulate work here
-      USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+      ////USLEEP to simulate work here
+      //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
 
       //Wait for the request to finish
       if (myAddress % 2 == 1){
@@ -171,14 +171,7 @@ int main(int argc, char** argv) {
   #pragma omp parallel
   {
     int tid = omp_get_thread_num();
-    if (tid == verboser_thread && world_rank == verboser_rank){
-      printf("----------------------------------\nArguments are: \n");
-      printf("BASE %d FLUCTUATION %d THREADS %d \n", SLEEP_BASE, SLEEP_FLUCTUATION, NUM_THREADS);
-      cout << "Verboser is " << verboser_rank << " " << verboser_thread << endl;
-      cout << "Number of threads " <<  omp_get_num_threads() << endl;
-    }
-
-    #pragma omp barrier
+    
     //Use Send & Recv
     if (world_rank % 2 == 0){
       busy_send_recv_sync_routine(world_rank + 1, world_rank, false, world_size);
@@ -186,7 +179,6 @@ int main(int argc, char** argv) {
       busy_send_recv_sync_routine(world_rank - 1, world_rank, false, world_size);
     }
 
-    #pragma omp barrier
     //Use Send & Recv
     if (world_rank % 2 == 0){
       busy_send_recv_sync_routine(world_rank + 1, world_rank, verboser_rank == world_rank && verboser_thread == tid, world_size);
@@ -194,12 +186,12 @@ int main(int argc, char** argv) {
       busy_send_recv_sync_routine(world_rank - 1, world_rank, verboser_rank == world_rank && verboser_thread == tid, world_size);
     }
 
-    //Use Isend & Irecv
-    if (world_rank % 2 == 0){
-      busy_send_recv_async_routine(world_rank + 1, world_rank, verboser_rank == world_rank && verboser_thread == tid, world_size);
-    }else{
-      busy_send_recv_async_routine(world_rank - 1, world_rank, verboser_rank == world_rank && verboser_thread == tid, world_size);
-    }
+    // //Use Isend & Irecv
+    // if (world_rank % 2 == 0){
+    //   busy_send_recv_async_routine(world_rank + 1, world_rank, verboser_rank == world_rank && verboser_thread == tid, world_size);
+    // }else{
+    //   busy_send_recv_async_routine(world_rank - 1, world_rank, verboser_rank == world_rank && verboser_thread == tid, world_size);
+    // }
 
 
   }

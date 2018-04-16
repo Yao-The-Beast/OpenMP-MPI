@@ -1,0 +1,400 @@
+Scatter_Multi_MPIs Starts
+-----------------------------------------
+Scattering Sync Latency is: 
+Average: 224.897671 ms, Median: 206.947327 ms 
+Real Throughput: 33.375317 MB/s, Normalized Throughput: 33.375317 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 55.430841 ms, Median: 55.074692 ms 
+Real Throughput: 7.550207 MB/s, Normalized Throughput: 7.550207 MB/s
+-----------------------------------------
+Scattering Sync Latency is: 
+Average: 5302.868557 ms, Median: 5284.070969 ms 
+Real Throughput: 44.250698 MB/s, Normalized Throughput: 44.250698 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 5921.072674 ms, Median: 5931.138992 ms 
+Real Throughput: 14.305859 MB/s, Normalized Throughput: 14.305859 MB/s
+-----------------------------------------
+Scattering Sync Latency is: 
+Average: 730.258083 ms, Median: 672.101974 ms 
+Real Throughput: 42.756360 MB/s, Normalized Throughput: 42.756360 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 59.617758 ms, Median: 59.127808 ms 
+Real Throughput: 27.220126 MB/s, Normalized Throughput: 27.220126 MB/s
+-----------------------------------------
+Scattering Sync Latency is: 
+Average: 6142.020655 ms, Median: 6121.873856 ms 
+Real Throughput: 52.103342 MB/s, Normalized Throughput: 52.103342 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 5165.598488 ms, Median: 5150.079727 ms 
+Real Throughput: 50.888390 MB/s, Normalized Throughput: 50.888390 MB/s
+-----------------------------------------
+Scattering Sync Latency is: 
+Average: 7228.310776 ms, Median: 7213.115692 ms 
+Real Throughput: 52.980636 MB/s, Normalized Throughput: 52.980636 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 5576.591301 ms, Median: 5561.113358 ms 
+Real Throughput: 92.546812 MB/s, Normalized Throughput: 92.546812 MB/s
+-----------------------------------------
+Scattering Sync Latency is: 
+Average: 5486.840725 ms, Median: 5448.102951 ms 
+Real Throughput: 42.737261 MB/s, Normalized Throughput: 42.737261 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 133.085632 ms, Median: 132.083893 ms 
+Real Throughput: 118.182734 MB/s, Normalized Throughput: 118.182734 MB/s
+P2P_Send_Multi_MPIs Ends \n
+Scatter_Multi_OpenMP 2*64 Starts
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 1134.692478 ms, Median: 1109.838486 ms 
+Real Throughput: 0.887668 MB/s, Normalized Throughput: 0.887668 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 233.773470 ms, Median: 215.768814 ms 
+Real Throughput: 19.472889 MB/s, Normalized Throughput: 19.472889 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 739.178085 ms, Median: 737.905502 ms 
+Real Throughput: 1.813441 MB/s, Normalized Throughput: 1.813441 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 285.776615 ms, Median: 294.923782 ms 
+Real Throughput: 21.180180 MB/s, Normalized Throughput: 21.180180 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 1587.330103 ms, Median: 1583.099365 ms 
+Real Throughput: 3.565911 MB/s, Normalized Throughput: 3.565911 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 684.261799 ms, Median: 694.036484 ms 
+Real Throughput: 25.824795 MB/s, Normalized Throughput: 25.824795 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 800.456715 ms, Median: 798.940659 ms 
+Real Throughput: 6.889789 MB/s, Normalized Throughput: 6.889789 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 888.492489 ms, Median: 934.123993 ms 
+Real Throughput: 25.824632 MB/s, Normalized Throughput: 25.824632 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 1708.380222 ms, Median: 1703.977585 ms 
+Real Throughput: 13.450930 MB/s, Normalized Throughput: 13.450930 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 2654.524851 ms, Median: 2788.066864 ms 
+Real Throughput: 21.173554 MB/s, Normalized Throughput: 21.173554 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 2758.978128 ms, Median: 2753.973007 ms 
+Real Throughput: 24.283836 MB/s, Normalized Throughput: 24.283836 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 12266.941595 ms, Median: 12080.907822 ms 
+Real Throughput: 23.881043 MB/s, Normalized Throughput: 23.881043 MB/s
+Scatter_Multi_OpenMP 2*64 Ends \n
+Scatter_Multi_OpenMP 4*32 Starts
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 108.977699 ms, Median: 108.003616 ms 
+Real Throughput: 2.540010 MB/s, Normalized Throughput: 2.540010 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 75.995922 ms, Median: 75.101852 ms 
+Real Throughput: 43.249624 MB/s, Normalized Throughput: 43.249624 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 155.387449 ms, Median: 154.018402 ms 
+Real Throughput: 4.989362 MB/s, Normalized Throughput: 4.989362 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 142.270517 ms, Median: 140.905380 ms 
+Real Throughput: 51.768172 MB/s, Normalized Throughput: 51.768172 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 319.811773 ms, Median: 317.811966 ms 
+Real Throughput: 10.185484 MB/s, Normalized Throughput: 10.185484 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 307.147551 ms, Median: 308.990479 ms 
+Real Throughput: 53.804539 MB/s, Normalized Throughput: 53.804539 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 7093.668127 ms, Median: 7095.098495 ms 
+Real Throughput: 19.362293 MB/s, Normalized Throughput: 19.362293 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 6080.625868 ms, Median: 6072.044373 ms 
+Real Throughput: 50.531658 MB/s, Normalized Throughput: 50.531658 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 1025.776005 ms, Median: 1029.968262 ms 
+Real Throughput: 37.419703 MB/s, Normalized Throughput: 37.419703 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 2104.955769 ms, Median: 2094.030380 ms 
+Real Throughput: 47.222126 MB/s, Normalized Throughput: 47.222126 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 8855.374861 ms, Median: 8836.030960 ms 
+Real Throughput: 58.591101 MB/s, Normalized Throughput: 58.591101 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 10868.966579 ms, Median: 10866.165161 ms 
+Real Throughput: 45.744027 MB/s, Normalized Throughput: 45.744027 MB/s
+Scatter_Multi_OpenMP 4*32 Ends \n
+Scatter_Multi_OpenMP 8*16 Starts
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 6594.863081 ms, Median: 6581.068039 ms 
+Real Throughput: 3.190254 MB/s, Normalized Throughput: 3.190254 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 5657.863760 ms, Median: 5656.003952 ms 
+Real Throughput: 54.787503 MB/s, Normalized Throughput: 54.787503 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 654.841232 ms, Median: 654.220581 ms 
+Real Throughput: 6.219737 MB/s, Normalized Throughput: 6.219737 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 135.379267 ms, Median: 138.998032 ms 
+Real Throughput: 71.512718 MB/s, Normalized Throughput: 71.512718 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 6751.442432 ms, Median: 6743.907928 ms 
+Real Throughput: 12.982819 MB/s, Normalized Throughput: 12.982819 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 6068.772745 ms, Median: 6072.998047 ms 
+Real Throughput: 68.765950 MB/s, Normalized Throughput: 68.765950 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 661.198425 ms, Median: 658.988953 ms 
+Real Throughput: 24.497371 MB/s, Normalized Throughput: 24.497371 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 687.698269 ms, Median: 689.983368 ms 
+Real Throughput: 78.884182 MB/s, Normalized Throughput: 78.884182 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 6927.367592 ms, Median: 6916.046143 ms 
+Real Throughput: 46.624144 MB/s, Normalized Throughput: 46.624144 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 7124.987650 ms, Median: 6886.005402 ms 
+Real Throughput: 74.993783 MB/s, Normalized Throughput: 74.993783 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 234.568548 ms, Median: 231.981277 ms 
+Real Throughput: 69.604205 MB/s, Normalized Throughput: 69.604205 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 1308.973789 ms, Median: 1292.943954 ms 
+Real Throughput: 79.820976 MB/s, Normalized Throughput: 79.820976 MB/s
+Scatter_Multi_OpenMP 8*16 Ends \n
+Scatter_Multi_OpenMP 16*8 Starts
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 6333.661222 ms, Median: 6329.059601 ms 
+Real Throughput: 4.995064 MB/s, Normalized Throughput: 4.995064 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 5785.448694 ms, Median: 5769.014359 ms 
+Real Throughput: 49.325953 MB/s, Normalized Throughput: 49.325953 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 114.208794 ms, Median: 113.010406 ms 
+Real Throughput: 10.685142 MB/s, Normalized Throughput: 10.685142 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 105.132675 ms, Median: 102.996826 ms 
+Real Throughput: 75.217846 MB/s, Normalized Throughput: 75.217846 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 236.268997 ms, Median: 233.888626 ms 
+Real Throughput: 20.489245 MB/s, Normalized Throughput: 20.489245 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 189.862394 ms, Median: 190.019608 ms 
+Real Throughput: 78.925060 MB/s, Normalized Throughput: 78.925060 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 6359.450006 ms, Median: 6350.040436 ms 
+Real Throughput: 38.879247 MB/s, Normalized Throughput: 38.879247 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 6194.842815 ms, Median: 6185.054779 ms 
+Real Throughput: 87.670476 MB/s, Normalized Throughput: 87.670476 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 652.708483 ms, Median: 652.074814 ms 
+Real Throughput: 67.079374 MB/s, Normalized Throughput: 67.079374 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 584.242249 ms, Median: 573.158264 ms 
+Real Throughput: 90.543886 MB/s, Normalized Throughput: 90.543886 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 6672.109604 ms, Median: 6659.984589 ms 
+Real Throughput: 85.086490 MB/s, Normalized Throughput: 85.086490 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 7146.810484 ms, Median: 7091.999054 ms 
+Real Throughput: 90.850874 MB/s, Normalized Throughput: 90.850874 MB/s
+Scatter_Multi_OpenMP 16*8 Ends \n
+Scatter_Multi_OpenMP 32*4 Starts
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 52.953386 ms, Median: 52.928925 ms 
+Real Throughput: 11.477008 MB/s, Normalized Throughput: 11.477008 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 68.267822 ms, Median: 66.041946 ms 
+Real Throughput: 42.527886 MB/s, Normalized Throughput: 42.527886 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 64.799500 ms, Median: 64.849854 ms 
+Real Throughput: 14.520714 MB/s, Normalized Throughput: 14.520714 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 76.081371 ms, Median: 75.101852 ms 
+Real Throughput: 76.573164 MB/s, Normalized Throughput: 76.573164 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 299.868488 ms, Median: 301.122665 ms 
+Real Throughput: 27.568794 MB/s, Normalized Throughput: 27.568794 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 117.602730 ms, Median: 111.103058 ms 
+Real Throughput: 86.575649 MB/s, Normalized Throughput: 86.575649 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 235.648537 ms, Median: 236.034393 ms 
+Real Throughput: 57.550950 MB/s, Normalized Throughput: 57.550950 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 221.476269 ms, Median: 218.153000 ms 
+Real Throughput: 94.049884 MB/s, Normalized Throughput: 94.049884 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 325.872803 ms, Median: 324.964523 ms 
+Real Throughput: 77.413819 MB/s, Normalized Throughput: 77.413819 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 407.545519 ms, Median: 403.881073 ms 
+Real Throughput: 98.485527 MB/s, Normalized Throughput: 98.485527 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 7385.464239 ms, Median: 7376.909256 ms 
+Real Throughput: 90.966859 MB/s, Normalized Throughput: 90.966859 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 7744.178486 ms, Median: 7676.124573 ms 
+Real Throughput: 94.103484 MB/s, Normalized Throughput: 94.103484 MB/s
+Scatter_Multi_OpenMP 32*4 Ends \n
+Scatter_Multi_OpenMP 64*2 Starts
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 6076.761293 ms, Median: 6068.944931 ms 
+Real Throughput: 25.466512 MB/s, Normalized Throughput: 25.466512 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 5972.075748 ms, Median: 5966.901779 ms 
+Real Throughput: 42.544783 MB/s, Normalized Throughput: 42.544783 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 100.811815 ms, Median: 99.897385 ms 
+Real Throughput: 48.494995 MB/s, Normalized Throughput: 48.494995 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 71.898031 ms, Median: 72.002411 ms 
+Real Throughput: 64.059205 MB/s, Normalized Throughput: 64.059205 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 80.181694 ms, Median: 79.154968 ms 
+Real Throughput: 73.942901 MB/s, Normalized Throughput: 73.942901 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 91.276884 ms, Median: 90.837479 ms 
+Real Throughput: 78.935679 MB/s, Normalized Throughput: 78.935679 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 6383.843851 ms, Median: 6394.863129 ms 
+Real Throughput: 94.611131 MB/s, Normalized Throughput: 94.611131 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 6366.382265 ms, Median: 6346.940994 ms 
+Real Throughput: 89.856379 MB/s, Normalized Throughput: 89.856379 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 127.604437 ms, Median: 126.838684 ms 
+Real Throughput: 111.504978 MB/s, Normalized Throughput: 111.504978 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 289.606619 ms, Median: 287.055969 ms 
+Real Throughput: 97.238793 MB/s, Normalized Throughput: 97.238793 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 182.333422 ms, Median: 181.913376 ms 
+Real Throughput: 127.372024 MB/s, Normalized Throughput: 127.372024 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 923.136520 ms, Median: 923.156738 ms 
+Real Throughput: 97.948082 MB/s, Normalized Throughput: 97.948082 MB/s
+Scatter_Multi_OpenMP 64*2 Ends \n
+Scatter_Multi_OpenMP 128*1 Starts
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 74.915075 ms, Median: 74.863434 ms 
+Real Throughput: 7.252076 MB/s, Normalized Throughput: 7.252076 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 82.162333 ms, Median: 82.015991 ms 
+Real Throughput: 7.291566 MB/s, Normalized Throughput: 7.291566 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 6843.642521 ms, Median: 6846.189499 ms 
+Real Throughput: 14.220542 MB/s, Normalized Throughput: 14.220542 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 6860.190201 ms, Median: 6865.978241 ms 
+Real Throughput: 13.969307 MB/s, Normalized Throughput: 13.969307 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 6752.994347 ms, Median: 6750.106812 ms 
+Real Throughput: 26.823998 MB/s, Normalized Throughput: 26.823998 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 6797.048378 ms, Median: 6792.068481 ms 
+Real Throughput: 25.766310 MB/s, Normalized Throughput: 25.766310 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 6999.775600 ms, Median: 7002.830505 ms 
+Real Throughput: 49.793974 MB/s, Normalized Throughput: 49.793974 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 7056.155825 ms, Median: 7063.865662 ms 
+Real Throughput: 47.677814 MB/s, Normalized Throughput: 47.677814 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 6423.308516 ms, Median: 6413.936615 ms 
+Real Throughput: 94.441561 MB/s, Normalized Throughput: 94.441561 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 6556.592894 ms, Median: 6537.199020 ms 
+Real Throughput: 86.643867 MB/s, Normalized Throughput: 86.643867 MB/s
+-----------------------------------------
+Scatter Using Isend Latency is: 
+Average: 143.589401 ms, Median: 141.143799 ms 
+Real Throughput: 119.133292 MB/s, Normalized Throughput: 119.133292 MB/s
+-----------------------------------------
+Scatter Using MailRoom Latency is: 
+Average: 1685.057545 ms, Median: 1569.032669 ms 
+Real Throughput: 63.554299 MB/s, Normalized Throughput: 63.554299 MB/s
+Scatter_Multi_OpenMP 128*1 Ends \n

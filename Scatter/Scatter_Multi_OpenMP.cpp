@@ -2,7 +2,7 @@
 
 using namespace std;
 
-#define NUM_ACTUAL_MESSAGES 10000
+#define NUM_ACTUAL_MESSAGES 5000
 #define NUM_WARMUP_MESSAGES 1000
 #define BUSY_SEND_RECV_TAG 1
 #define MASTER_RANK 0
@@ -11,7 +11,7 @@ using namespace std;
 const int THREAD_LEVEL = MPI_THREAD_MULTIPLE;
 
 //Number of messages to be sent to one receive per operation
-const int NUM_MESSAGE_PER_OPERATION = NUM_MESSAGE_PER_RECEIVER;
+int NUM_MESSAGE_PER_OPERATION = NUM_MESSAGE_PER_RECEIVER;
 const int MESSAGE_SIZE = NUM_DOUBLES;
 
 int NUM_THREADS = 1;
@@ -51,8 +51,8 @@ void scatter_async_regular_routine(int my_rank, int my_tid, bool isVerbose){
         }
       }
       MPI_Irecv(&recvBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER_RANK, my_tid, MPI_COMM_WORLD, &recvRequest);
-      //usleep to simulate work here
-      USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+      //USLEEP to simulate work here
+      ////USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
       //Wait for the requests
       MPI_Waitall(counter, sendRequests, MPI_STATUSES_IGNORE);
       MPI_Waitall(1, &recvRequest, MPI_STATUSES_IGNORE);
@@ -62,8 +62,8 @@ void scatter_async_regular_routine(int my_rank, int my_tid, bool isVerbose){
     for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
       //Receive the scattered message
       MPI_Irecv(&recvBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER_RANK, my_tid, MPI_COMM_WORLD, &recvRequest);
-      //usleep to simulate work here
-      USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+      //USLEEP to simulate work here
+      ////USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
       //Wait for the requests
       MPI_Waitall(1, &recvRequest, MPI_STATUSES_IGNORE);
       //Calculate the latency
@@ -119,8 +119,8 @@ void scatter_async_self_invented_routine(int my_rank, int my_tid, bool isVerbose
       -1
     );
 
-    //Sleep
-    USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
+    //Usleep
+    ////USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
 
     //Call the scatter function, option set to receive
     SELF_DEFINED_SCATTER(mailRoom,
@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
 
     //Porcess Arguments
     int opt;
-    while ((opt = getopt(argc,argv,":B:F:T:d")) != EOF){
+    while ((opt = getopt(argc,argv,":B:F:T:N:d")) != EOF){
         switch(opt)
         {
             case 'B':
@@ -167,6 +167,9 @@ int main(int argc, char** argv) {
               break;
             case 'T':
               NUM_THREADS =  stoi(optarg);
+              break;
+            case 'N':
+              NUM_MESSAGE_PER_OPERATION = stoi(optarg);
               break;
             case '?':
               fprintf(stderr, "USAGE:\n -B <BASE> -F <FLUCT> To sleep for BASE + FLUCT miscroseconds \n");
@@ -207,21 +210,23 @@ int main(int argc, char** argv) {
     if (world_size == 1)
       verboser_rank = 0;
     else
-      verboser_rank = GENERATE_A_RANDOM_NUMBER(0,world_size - 1);
+      verboser_rank = GENERATE_A_RANDOM_NUMBER(0,world_size - 1, 1);
 
     omp_set_num_threads(NUM_THREADS);
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
     #pragma omp parallel
     {
       int tid = omp_get_thread_num();
-      if (tid == verboser_thread && world_rank == verboser_rank){
-        printf("----------------------------------\nArguments are: \n");
-        printf("BASE %d FLUCTUATION %d THREADS %d \n", SLEEP_BASE, SLEEP_FLUCTUATION, NUM_THREADS);
-        cout << "Verboser is " << verboser_rank << " " << verboser_thread << endl;
-        cout << "Number of threads " <<  omp_get_num_threads() << endl;
-      }
       scatter_async_regular_routine(world_rank, tid, tid == verboser_thread && world_rank == verboser_rank);
+    }
 
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    #pragma omp parallel
+    {
+      int tid = omp_get_thread_num();
       scatter_async_self_invented_routine(world_rank, tid, tid == verboser_thread && world_rank == verboser_rank);
     }
 
