@@ -9,8 +9,8 @@
 int NUM_MESSAGE_PER_OPERATION = NUM_MESSAGE_PER_RECEIVER;
 const int MESSAGE_SIZE = NUM_DOUBLES;
 
-int SLEEP_BASE = 100;
-int SLEEP_FLUCTUATION = 1;
+int SLEEP_BASE = 0;
+int SLEEP_FLUCTUATION = 0;
 MPI_Datatype dt;
 
 using namespace std;
@@ -219,7 +219,8 @@ int main(int argc, char** argv) {
   //Create dt datatype
   CREATE_CONTIGUOUS_DATATYPE(dt);
 
-  int verboser = GENERATE_A_RANDOM_NUMBER(1, world_size - 1, 1);
+  //int verboser = GENERATE_A_RANDOM_NUMBER(1, world_size - 1, 1);
+  int verboser = 1;
 
   MPI_Barrier(MPI_COMM_WORLD);
 

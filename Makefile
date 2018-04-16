@@ -11,7 +11,7 @@ LIBS =
 
 TARGETS = P2P_Send_Multi_MPIs P2P_Send_Multi_OpenMP \
 					Scatter_Multi_MPIs Scatter_Multi_OpenMP \
-					Broadcast_Multi_MPIs
+					Broadcast_Multi_MPIs Broadcast_Multi_OpenMP
 
 
 all:	$(TARGETS)
@@ -33,6 +33,9 @@ Scatter_Multi_OpenMP: Scatter_Multi_OpenMP.o
 Broadcast_Multi_MPIs: Broadcast_Multi_MPIs.o
 	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) Broadcast_Multi_MPIs.o
 
+Broadcast_Multi_OpenMP: Broadcast_Multi_OpenMP.o
+	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) Broadcast_Multi_OpenMP.o
+
 
 # Create Object Files
 
@@ -50,6 +53,9 @@ Scatter_Multi_OpenMP.o: Scatter/Scatter_Multi_OpenMP.cpp Lib/Lib.h
 
 Broadcast_Multi_MPIs.o: Broadcast/Broadcast_Multi_MPIs.cpp Lib/Lib.h
 	$(MPCC) -c $(CFLAGS) $(OPENMP) Broadcast/Broadcast_Multi_MPIs.cpp Lib/Lib.h
+
+Broadcast_Multi_OpenMP.o: Broadcast/Broadcast_Multi_OpenMP.cpp Lib/Lib.h
+	$(MPCC) -c $(CFLAGS) $(OPENMP) Broadcast/Broadcast_Multi_OpenMP.cpp Lib/Lib.h
 
 clean:
 	rm -f *.o $(TARGETS) *.stdout *.error *.txt

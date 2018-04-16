@@ -10,7 +10,7 @@ using namespace std;
 */
 void SELF_DEFINED_BROADCAST(
   MailRoom& mailRoom,
-  double* sendBuffer, double* recvBuffer,
+  vector<double>* buffer,
   int num_messages, int message_size, MPI_Datatype dt,
   int my_rank, int my_tid,
   int sender_rank, int sender_tid,
@@ -21,48 +21,26 @@ void SELF_DEFINED_BROADCAST(
     /* ---------- Receive ----------*/
     if (option == 1){
       //Step 3
-      pair<int, int> sender_info = mailRoom.fetchMail(my_tid, recvBuffer, "SCATTER");
+      pair<int, int> sender_info = mailRoom.fetchMail(my_tid, &(*buffer)[0], "BROADCAST");
       return;
     }
 
-    /*---------- Send ----------*/
-    int SELF_DEFINED_BROADCAST_TAG = 98;
-    MPI_Request sendRequests[world_size];
-    MPI_Request recvRequest;
     //Sender rountine
     if (my_rank == sender_rank && my_tid == sender_tid){
-      for (int w = 0; w < world_size; w++){
-        //Step 1
-        MPI_Isend(
-          sendBuffer + w * num_messages * message_size * num_threads,
-          num_messages,
-          dt, w,
-          SELF_DEFINED_SCATTER_TAG, MPI_COMM_WORLD, &sendRequests[w]);
-      }
-      //prevent deadlock when the master is both the postman and the master
-      if (my_tid != postman_tid){
-        MPI_Waitall(world_size, sendRequests, MPI_STATUSES_IGNORE);
+      MPI_Bcast(&(*buffer)[0],  num_messages, dt, sender_rank, MPI_COMM_WORLD);
+      //Step 2 part 2, Put the message into ech mailbox
+      for (int t = 0; t < num_threads; t++){
+        mailRoom.putMail(buffer, t, sender_rank, sender_tid, "BROADCAST");
       }
     }
 
     //Postman routine
-    if (my_tid == postman_tid){
+    if (my_tid == postman_tid && my_rank != sender_rank){
       //Step 2 part 1, Receive the message
-      vector<double> recvBuffer(message_size * num_messages);
-      MPI_Irecv(
-        &recvBuffer[0],
-        num_messages,
-        dt, sender_rank,
-        SELF_DEFINED_SCATTER_TAG, MPI_COMM_WORLD, &recvRequest);
-      MPI_Waitall(1, &recvRequest, MPI_STATUSES_IGNORE);
-      //If postman is master, also wait on send request
-      if (my_rank == sender_rank && my_tid == sender_tid){
-        MPI_Waitall(world_size, sendRequests, MPI_STATUSES_IGNORE);
-      }
-
+      MPI_Bcast(&(*buffer)[0],  num_messages, dt, sender_rank, MPI_COMM_WORLD);
       //Step 2 part 2, Put the message into ech mailbox
       for (int t = 0; t < num_threads; t++){
-        mailRoom.putMail(recvBuffer, t, sender_rank, sender_tid, "SCATTER");
+        mailRoom.putMail(buffer, t, sender_rank, sender_tid, "BROADCAST");
       }
     }
 }

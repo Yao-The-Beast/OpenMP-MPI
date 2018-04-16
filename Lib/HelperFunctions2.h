@@ -1,6 +1,33 @@
-#include "Struct.h"
+#include <mpi.h>
+#include <iostream>
+#include <ctime>
+#include <ratio>
+#include <chrono>
+#include <stdlib.h>
+#include <stdio.h>
+#include <vector>
+#include <algorithm>
+#include <functional>
+#include <numeric>
+#include <time.h>
+#include <fstream>
+#include <unistd.h>
+#include "omp.h"
+#include <chrono>
+#include <thread>
+#include <condition_variable>
+#include <mutex>
+#include <queue>
+#include <cstring>
 
 using namespace std;
+
+#define NUM_DOUBLES 2048
+
+void CREATE_CONTIGUOUS_DATATYPE(MPI_Datatype& newType, int num_data = NUM_DOUBLES, MPI_Datatype oldType = MPI_DOUBLE){
+   MPI_Type_contiguous(num_data, oldType, &newType);
+   MPI_Type_commit(&newType);
+}
 
 /*
   Our scatter function
@@ -21,7 +48,7 @@ void SELF_DEFINED_SCATTER(
     /* ---------- Receive ----------*/
     if (option == 1){
       //Step 3
-      pair<int, int> sender_info = mailRoom.fetchMail(my_tid, recvBuffer, "SCATTER");
+      pair<int, int> sender_info = mailRoom.fetchMail(my_tid, recvBuffer);
       return;
     }
 
@@ -33,10 +60,7 @@ void SELF_DEFINED_SCATTER(
     if (my_rank == sender_rank && my_tid == sender_tid){
       for (int w = 0; w < world_size; w++){
         //Step 1
-        MPI_Isend(
-          sendBuffer + w * num_messages_per_thread * message_size * num_threads,
-          num_messages_per_thread * num_threads,
-          dt, w,
+        MPI_Isend(sendBuffer + w * num_messages_per_thread * message_size * num_threads, num_threads, dt, w,
           SELF_DEFINED_SCATTER_TAG, MPI_COMM_WORLD, &sendRequests[w]);
       }
       //prevent deadlock when the master is both the postman and the master
@@ -60,7 +84,7 @@ void SELF_DEFINED_SCATTER(
       for (int t = 0; t < num_threads; t++){
         vector<double> thisMail(recvBuffer.begin() + message_size * num_messages_per_thread * t,
           recvBuffer.begin() + message_size * num_messages_per_thread * (t + 1));
-        mailRoom.putMail(&thisMail, t, sender_rank, sender_tid, "SCATTER");
+        mailRoom.putMail(thisMail, t, sender_rank, sender_tid);
       }
     }
 }

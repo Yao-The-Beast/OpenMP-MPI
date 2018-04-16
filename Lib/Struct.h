@@ -110,8 +110,8 @@ struct MailRoom{
     categories["GATHER"] = vector<MailBox>(numMailBoxes);
   }
 
-  void putMail(vector<double> mail, int whichMailBox, int sender_rank, int sender_tid, string operation){
-    categories[operation][whichMailBox].putMail(mail, sender_rank, sender_tid);
+  void putMail(vector<double>* mail, int whichMailBox, int sender_rank, int sender_tid, string operation){
+    categories[operation][whichMailBox].putMail(*mail, sender_rank, sender_tid);
   }
 
   //Return <sender_rank, sender_tid>

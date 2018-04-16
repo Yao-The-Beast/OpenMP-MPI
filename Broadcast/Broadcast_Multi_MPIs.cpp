@@ -1,14 +1,14 @@
 #include "../Lib/Lib.h"
 
-#define NUM_ACTUAL_MESSAGES 10000
+#define NUM_ACTUAL_MESSAGES 5000
 #define NUM_WARMUP_MESSAGES 10000
 #define BUSY_SEND_RECV_TAG 1
 #define MASTER 0
 
-int SLEEP_BASE = 100;
-int SLEEP_FLUCTUATION = 1;
+int SLEEP_BASE = 0;
+int SLEEP_FLUCTUATION = 0;
 MPI_Datatype dt;
-const int NUM_MESSAGE_PER_OPERATION = NUM_MESSAGE_PER_RECEIVER;
+int NUM_MESSAGE_PER_OPERATION = NUM_MESSAGE_PER_RECEIVER;
 const int MESSAGE_SIZE = NUM_DOUBLES;
 
 using namespace std;
@@ -110,7 +110,6 @@ void broadcast_async_routine(int my_address, bool isVerbose, int world_size){
 
 //Async using Isend
 void broadcast_async_isend_routine(int my_world_rank, bool isVerbose, int world_size){
-
   vector<double> sendBuffer(MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 0);
   vector<double> recvBuffer(MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 0);
   vector<double> latencies;
@@ -170,7 +169,7 @@ void broadcast_async_isend_routine(int my_world_rank, bool isVerbose, int world_
 int main(int argc, char** argv) {
   //Porcess Arguments
   int opt;
-  while ((opt = getopt(argc,argv,":B:F:d")) != EOF){
+  while ((opt = getopt(argc,argv,":B:F:N:d")) != EOF){
       switch(opt)
       {
           case 'B':
@@ -178,6 +177,9 @@ int main(int argc, char** argv) {
             break;
           case 'F':
             SLEEP_FLUCTUATION = stoi(optarg);
+            break;
+          case 'N':
+            NUM_MESSAGE_PER_OPERATION = stoi(optarg);
             break;
           case '?':
             fprintf(stderr, "USAGE:\n -B <BASE> -F <FLUCT> To sleep for BASE + FLUCT miscroseconds \n");
@@ -204,11 +206,12 @@ int main(int argc, char** argv) {
   //Create dt datatype
   CREATE_CONTIGUOUS_DATATYPE(dt);
 
-  int verboser = GENERATE_A_RANDOM_NUMBER(1, world_size - 1, 0);
-  if (world_rank == verboser){
-    printf("Verboser is %d \n", verboser);
-    printf("SLEEP_BASES %d SLEEP_FLUCTUATION %d \n", SLEEP_BASE, SLEEP_FLUCTUATION);
-  }
+  //int verboser = GENERATE_A_RANDOM_NUMBER(1, world_size - 1, 1);
+  int verboser = 1;
+  // if (world_rank == verboser){
+  //   printf("Verboser is %d \n", verboser);
+  //   printf("SLEEP_BASES %d SLEEP_FLUCTUATION %d \n", SLEEP_BASE, SLEEP_FLUCTUATION);
+  // }
 
   MPI_Barrier(MPI_COMM_WORLD);
 
@@ -216,9 +219,9 @@ int main(int argc, char** argv) {
   broadcast_sync_routine(world_rank, verboser == world_rank, world_size);
   MPI_Barrier(MPI_COMM_WORLD);
 
-  //Async
-  broadcast_async_routine(world_rank, verboser == world_rank, world_size);
-  MPI_Barrier(MPI_COMM_WORLD);
+  // //Async
+  // broadcast_async_routine(world_rank, verboser == world_rank, world_size);
+  // MPI_Barrier(MPI_COMM_WORLD);
 
   //Use Isend instead of Iscatter
   broadcast_async_isend_routine(world_rank, verboser == world_rank, world_size);

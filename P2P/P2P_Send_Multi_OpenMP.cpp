@@ -11,8 +11,8 @@ int NUM_MESSAGE_PER_OPERATION = NUM_MESSAGE_PER_RECEIVER;
 const int MESSAGE_SIZE = NUM_DOUBLES;
 
 int NUM_THREADS = 1;
-int SLEEP_BASE = 100;
-int SLEEP_FLUCTUATION = 25;
+int SLEEP_BASE = 0;
+int SLEEP_FLUCTUATION = 0;
 MPI_Datatype dt;
 
 /* ----------- SYNCHRONOUS ---------- */
@@ -171,7 +171,7 @@ int main(int argc, char** argv) {
   #pragma omp parallel
   {
     int tid = omp_get_thread_num();
-    
+
     //Use Send & Recv
     if (world_rank % 2 == 0){
       busy_send_recv_sync_routine(world_rank + 1, world_rank, false, world_size);
