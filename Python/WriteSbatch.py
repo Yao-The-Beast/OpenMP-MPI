@@ -26,10 +26,10 @@ def constructSrun(num_nodes_N, num_ranks_per_node_n, num_cores_per_mpi_c ,binary
 def main():
 	# set parameters
 	ap = argparse.ArgumentParser()
-	ap.add_argument("-b", "--binary", required=True, help="P2P, Scatter, Broadcast or Gather");
-	ap.add_argument("-p", "--processor", required=True, help="haswell or knl");
-	ap.add_argument("-r", "--max_ranks_per_node", required=True, help="max amount of mpis per node");
-	ap.add_argument("-n", "--max_msg_size", required=True, help="the size of each message, eg: 64KB");
+	ap.add_argument("-b", "--binary", required=True, help="eg: P2P, Scatter, Broadcast or Gather");
+	ap.add_argument("-p", "--processor", required=True, help="eg: haswell or knl");
+	ap.add_argument("-r", "--max_ranks_per_node", required=True, help="max amount of mpis per node, eg: 64");
+	ap.add_argument("-n", "--max_msg_size", required=True, help="the size of each message in KB, eg: 64");
 	args = vars(ap.parse_args());
 	binary = args["binary"];
 	processor = args["processor"];
