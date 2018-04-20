@@ -37,8 +37,6 @@ void busy_send_recv_sync_routine(int hisAddress, int myAddress, bool isVerbose, 
         recv = MPI_Wtime();
         latencies.push_back(recv - hisSent[10]);
       }
-      ////USLEEP to simulate work here
-      //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
     }
 
     if (isVerbose){
@@ -46,60 +44,9 @@ void busy_send_recv_sync_routine(int hisAddress, int myAddress, bool isVerbose, 
       Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
         latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2,
         sizeof(double) * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 1, false);
-      printf("-----------------------------------------\n");
-      printf("Sync Send & Recv Latency Stats are: \n");
+    latency_stats_in_microsecond.description = "send & recv";
       latency_stats_in_microsecond.print();
       //latency_stats_in_microsecond.write_to_csv_file("Output/twoSidedSleepSend_Multi_MPIs_Sync_" + to_string(world_size) + ".txt");
-    }
-}
-
-/* ----------- ASYNCHRONOUS ---------- */
-void busy_send_recv_async_routine(int hisAddress, int myAddress, bool isVerbose, int world_size){
-    //timestamp
-    double mySent[MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION];
-    double hisSent[MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION];
-    vector<double> latencies;
-    double recv;
-    MPI_Request sendRequest;
-    MPI_Request recvRequest;
-
-    double start_timestamp = MPI_Wtime();
-
-    for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
-
-        //Some send other recvs
-        if (myAddress % 2 == 1){
-          mySent[10] = MPI_Wtime();
-          MPI_Isend(mySent, NUM_MESSAGE_PER_OPERATION, dt, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, &sendRequest);
-        }else{
-          MPI_Irecv(hisSent, NUM_MESSAGE_PER_OPERATION, dt, hisAddress, BUSY_SEND_RECV_TAG, MPI_COMM_WORLD, &recvRequest);
-        }
-
-        ////USLEEP to simulate work here
-        //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
-
-        //Wait for the request to finish
-        if (myAddress % 2 == 1)
-          MPI_Waitall(1, &sendRequest, MPI_STATUSES_IGNORE);
-        else
-          MPI_Waitall(1, &recvRequest, MPI_STATUSES_IGNORE);
-
-        //Calculate latency here
-        if (isVerbose){
-          recv = MPI_Wtime();
-          latencies.push_back((recv - hisSent[10]));
-        }
-    }
-
-    if (isVerbose){
-      double end_timestamp = MPI_Wtime();
-      Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
-        latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2,
-        sizeof(double) * NUM_MESSAGE_PER_OPERATION * MESSAGE_SIZE, 1, false);
-      printf("-----------------------------------------\n");
-      printf("Async Send & Recv Latency Stats are: \n");
-      latency_stats_in_microsecond.print();
-      //latency_stats_in_microsecond.write_to_csv_file("Output/twoSidedSleepSend_Multi_MPIs_Async_" + to_string(world_size) + ".txt");
     }
 }
 
@@ -153,13 +100,6 @@ int main(int argc, char** argv) {
     busy_send_recv_sync_routine(world_rank - 1, world_rank, verboser == world_rank, world_size);
   }
 
-  // //Benchmark Async
-  // MPI_Barrier(MPI_COMM_WORLD);
-  // if (world_rank % 2 == 0){
-  //   busy_send_recv_async_routine(world_rank + 1, world_rank, verboser == world_rank, world_size);
-  // }else{
-  //   busy_send_recv_async_routine(world_rank - 1, world_rank, verboser == world_rank, world_size);
-  // }
 
   MPI_Finalize();
 }

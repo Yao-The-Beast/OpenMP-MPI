@@ -1,0 +1,77 @@
+#!/bin/bash -l 
+#SBATCH -C knl
+#SBATCH -p debug 
+#SBATCH -N 2 
+#SBATCH -t 00:30:00 
+#SBATCH -J P2P-knl
+#SBATCH -o P2P-knl.%j.stdout 
+#SBATCH -e P2P-knl.%j.error 
+#SBATCH -S 4 
+export OMP_PROC_BIND=true 
+export OMP_PLACES=threads 
+export MPICH_MAX_THREAD_SAFETY=MPI_THREAD_MULTIPLE 
+export OMP_NUM_THREADS=256 
+
+echo "P2P baseline, ranks/node:32, max msg size:32KB " 
+srun -N 2 -n 64 -c 8 --cpu_bind=cores ./P2P_MPI -B 0 -F 0 -N 1
+srun -N 2 -n 64 -c 8 --cpu_bind=cores ./P2P_MPI -B 0 -F 0 -N 2
+srun -N 2 -n 64 -c 8 --cpu_bind=cores ./P2P_MPI -B 0 -F 0 -N 4
+srun -N 2 -n 64 -c 8 --cpu_bind=cores ./P2P_MPI -B 0 -F 0 -N 8
+srun -N 2 -n 64 -c 8 --cpu_bind=cores ./P2P_MPI -B 0 -F 0 -N 16
+srun -N 2 -n 64 -c 8 --cpu_bind=cores ./P2P_MPI -B 0 -F 0 -N 32
+echo " " 
+
+echo "P2P Hybrid, ranks/node:1 number of threads: 32, max msg size:32KB " 
+srun -N 2 -n 2 -c 256 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 32 -N 1
+srun -N 2 -n 2 -c 256 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 32 -N 2
+srun -N 2 -n 2 -c 256 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 32 -N 4
+srun -N 2 -n 2 -c 256 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 32 -N 8
+srun -N 2 -n 2 -c 256 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 32 -N 16
+srun -N 2 -n 2 -c 256 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 32 -N 32
+echo " " 
+
+echo "P2P Hybrid, ranks/node:2 number of threads: 16, max msg size:32KB " 
+srun -N 2 -n 4 -c 128 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 16 -N 1
+srun -N 2 -n 4 -c 128 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 16 -N 2
+srun -N 2 -n 4 -c 128 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 16 -N 4
+srun -N 2 -n 4 -c 128 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 16 -N 8
+srun -N 2 -n 4 -c 128 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 16 -N 16
+srun -N 2 -n 4 -c 128 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 16 -N 32
+echo " " 
+
+echo "P2P Hybrid, ranks/node:4 number of threads: 8, max msg size:32KB " 
+srun -N 2 -n 8 -c 64 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 8 -N 1
+srun -N 2 -n 8 -c 64 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 8 -N 2
+srun -N 2 -n 8 -c 64 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 8 -N 4
+srun -N 2 -n 8 -c 64 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 8 -N 8
+srun -N 2 -n 8 -c 64 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 8 -N 16
+srun -N 2 -n 8 -c 64 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 8 -N 32
+echo " " 
+
+echo "P2P Hybrid, ranks/node:8 number of threads: 4, max msg size:32KB " 
+srun -N 2 -n 16 -c 32 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 4 -N 1
+srun -N 2 -n 16 -c 32 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 4 -N 2
+srun -N 2 -n 16 -c 32 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 4 -N 4
+srun -N 2 -n 16 -c 32 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 4 -N 8
+srun -N 2 -n 16 -c 32 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 4 -N 16
+srun -N 2 -n 16 -c 32 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 4 -N 32
+echo " " 
+
+echo "P2P Hybrid, ranks/node:16 number of threads: 2, max msg size:32KB " 
+srun -N 2 -n 32 -c 16 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 2 -N 1
+srun -N 2 -n 32 -c 16 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 2 -N 2
+srun -N 2 -n 32 -c 16 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 2 -N 4
+srun -N 2 -n 32 -c 16 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 2 -N 8
+srun -N 2 -n 32 -c 16 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 2 -N 16
+srun -N 2 -n 32 -c 16 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 2 -N 32
+echo " " 
+
+echo "P2P Hybrid, ranks/node:32 number of threads: 1, max msg size:32KB " 
+srun -N 2 -n 64 -c 8 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 1 -N 1
+srun -N 2 -n 64 -c 8 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 1 -N 2
+srun -N 2 -n 64 -c 8 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 1 -N 4
+srun -N 2 -n 64 -c 8 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 1 -N 8
+srun -N 2 -n 64 -c 8 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 1 -N 16
+srun -N 2 -n 64 -c 8 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 1 -N 32
+echo " " 
+

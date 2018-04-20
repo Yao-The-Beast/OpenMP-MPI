@@ -52,58 +52,7 @@ void broadcast_sync_routine(int my_address, bool isVerbose, int world_size){
     Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
       latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0,
       sizeof(double) * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 1, false);
-    printf("-----------------------------------------\n");
-    printf("Broadcasting Sync Latency is: \n");
-    latency_stats_in_microsecond.print();
-  }
-}
-
-//Async using MPI_Ibcast
-void broadcast_async_routine(int my_address, bool isVerbose, int world_size){
-  vector<double> buffer(MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 0);
-  vector<double> latencies;
-  double start_timestamp, end_timestamp;
-
-  start_timestamp = MPI_Wtime();
-
-  MPI_Request recvRequest, sendRequest;
-
-  //If I am the one who broadcasts the message
-  if (my_address == MASTER){
-    for (int i = 0; i < NUM_ACTUAL_MESSAGES; i++){
-      //initialize send buffer here
-      buffer[10] = MPI_Wtime();
-      //Send the messages
-      MPI_Ibcast(&buffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, MPI_COMM_WORLD, &sendRequest);
-      //Simulate here
-      //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
-      //Wait for the request
-      MPI_Waitall(1, &sendRequest, MPI_STATUSES_IGNORE);
-    }
-  //If I am the one who receives the message
-  }else{
-    for (int i = 0; i < NUM_ACTUAL_MESSAGES; i++){
-      //Send the messages
-      MPI_Ibcast(&buffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER, MPI_COMM_WORLD, &recvRequest);
-      //Simulate work here
-      //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
-      //Wait for the request
-      MPI_Waitall(1, &recvRequest, MPI_STATUSES_IGNORE);
-      //Put down the timestamp
-      if (isVerbose){
-        double recv = MPI_Wtime();
-        latencies.push_back(recv - buffer[10]);
-      }
-    }
-  }
-
-  if (isVerbose){
-    end_timestamp = MPI_Wtime();
-    Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
-      latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0,
-      sizeof(double) * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 1, false);
-    printf("-----------------------------------------\n");
-    printf("Broadcasting Async Latency is: \n");
+    latency_stats_in_microsecond.description = "broadcast";
     latency_stats_in_microsecond.print();
   }
 }
@@ -158,8 +107,7 @@ void broadcast_async_isend_routine(int my_world_rank, bool isVerbose, int world_
     Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
       latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0,
       sizeof(double) * NUM_MESSAGE_PER_OPERATION * MESSAGE_SIZE, 1, false);
-    printf("-----------------------------------------\n");
-    printf("Broadcasting Using Isend Latency is: \n");
+    latency_stats_in_microsecond.description = "isend";
     latency_stats_in_microsecond.print();
     //latency_stats_in_microsecond.write_to_csv_file("Output/FanoutSleep_Multi_MPIs_Sync_" + to_string(world_size) + ".txt");
   }
@@ -208,20 +156,12 @@ int main(int argc, char** argv) {
 
   //int verboser = GENERATE_A_RANDOM_NUMBER(1, world_size - 1, 1);
   int verboser = 1;
-  // if (world_rank == verboser){
-  //   printf("Verboser is %d \n", verboser);
-  //   printf("SLEEP_BASES %d SLEEP_FLUCTUATION %d \n", SLEEP_BASE, SLEEP_FLUCTUATION);
-  // }
 
   MPI_Barrier(MPI_COMM_WORLD);
 
   //Sync
   broadcast_sync_routine(world_rank, verboser == world_rank, world_size);
   MPI_Barrier(MPI_COMM_WORLD);
-
-  // //Async
-  // broadcast_async_routine(world_rank, verboser == world_rank, world_size);
-  // MPI_Barrier(MPI_COMM_WORLD);
 
   //Use Isend instead of Iscatter
   broadcast_async_isend_routine(world_rank, verboser == world_rank, world_size);

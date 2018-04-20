@@ -79,8 +79,7 @@ void scatter_async_regular_routine(int my_rank, int my_tid, bool isVerbose){
     Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
       latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0,
       sizeof(double) * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 1, false);
-    printf("-----------------------------------------\n");
-    printf("Scatter Using Isend Latency is: \n");
+    latency_stats_in_microsecond.description = "isend";
     latency_stats_in_microsecond.print();
     //latency_stats_in_microsecond.write_to_csv_file("Output/FanoutSleep_Multi_MPIs_Sync_" + to_string(world_size) + ".txt");
   }
@@ -145,8 +144,7 @@ void scatter_async_self_invented_routine(int my_rank, int my_tid, bool isVerbose
     Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
       latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0,
       sizeof(double) * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 1, false);
-    printf("-----------------------------------------\n");
-    printf("Scatter Using MailRoom Latency is: \n");
+    latency_stats_in_microsecond.description = "mailroom";
     latency_stats_in_microsecond.print();
     //latency_stats_in_microsecond.write_to_csv_file("Output/FanoutSleep_Multi_MPIs_Sync_" + to_string(world_size) + ".txt");
   }
@@ -208,10 +206,6 @@ int main(int argc, char** argv) {
     }
 
     int verboser_rank = 1;
-    // if (world_size == 1)
-    //   verboser_rank = 0;
-    // else
-    //   verboser_rank = GENERATE_A_RANDOM_NUMBER(0,world_size - 1, 1);
 
     omp_set_num_threads(NUM_THREADS);
 

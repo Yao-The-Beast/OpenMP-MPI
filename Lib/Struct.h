@@ -31,6 +31,7 @@ using namespace std;
 
 //Stats Structure to store the data and the relevant measurements
 struct Stats{
+  string description;
   double average;
   double median;
   vector<double> data;
@@ -46,8 +47,7 @@ struct Stats{
   }
 
   void print(){
-    printf("Average: %f ms, Median: %f ms \nReal Throughput: %f MB/s, Normalized Throughput: %f MB/s\n",
-      average, median, throughput, normalized_throughput);
+    printf("%s, %f, %f\n", description.c_str(), median, normalized_throughput);
   }
 
   void write_to_csv_file(string path){

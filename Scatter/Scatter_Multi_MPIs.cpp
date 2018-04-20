@@ -56,8 +56,7 @@ void busy_scatter_sync_routine(int my_address, bool isVerbose, int world_size){
     Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
       latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0,
       sizeof(double) * NUM_MESSAGE_PER_OPERATION * MESSAGE_SIZE, 1, false);
-    printf("-----------------------------------------\n");
-    printf("Scattering Sync Latency is: \n");
+    latency_stats_in_microsecond.description = "scatter";
     latency_stats_in_microsecond.print();
     //latency_stats_in_microsecond.write_to_csv_file("Output/FanoutSleep_Multi_MPIs_Sync_" + to_string(world_size) + ".txt");
   }
@@ -111,8 +110,7 @@ void busy_scatter_async_routine(int my_address, bool isVerbose, int world_size){
     Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
       latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0,
       sizeof(double) * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 1, false);
-    printf("-----------------------------------------\n");
-    printf("Scattering Async Latency is: \n");
+    latency_stats_in_microsecond.description = "iscatter";
     latency_stats_in_microsecond.print();
     //latency_stats_in_microsecond.write_to_csv_file("Output/FanoutSleep_Multi_MPIs_Sync_" + to_string(world_size) + ".txt");
   }
@@ -172,8 +170,7 @@ void busy_scatter_async_isend_routine(int my_world_rank, bool isVerbose, int wor
     Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
       latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0,
       sizeof(double) * NUM_MESSAGE_PER_OPERATION * MESSAGE_SIZE, 1, false);
-    printf("-----------------------------------------\n");
-    printf("Scatter Using Isend Latency is: \n");
+    latency_stats_in_microsecond.description = "isend";
     latency_stats_in_microsecond.print();
     //latency_stats_in_microsecond.write_to_csv_file("Output/FanoutSleep_Multi_MPIs_Sync_" + to_string(world_size) + ".txt");
   }
@@ -227,10 +224,6 @@ int main(int argc, char** argv) {
   //Sync
   busy_scatter_sync_routine(world_rank, verboser == world_rank, world_size);
   MPI_Barrier(MPI_COMM_WORLD);
-
-  // //Async
-  // busy_scatter_async_routine(world_rank, verboser == world_rank, world_size);
-  // MPI_Barrier(MPI_COMM_WORLD);
 
   //Use Isend instead of Iscatter
   busy_scatter_async_isend_routine(world_rank, verboser == world_rank, world_size);

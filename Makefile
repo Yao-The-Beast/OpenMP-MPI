@@ -9,31 +9,31 @@ OPENMP = -openmp #Note: this is the flag for Intel compilers. Change this to -fo
 CFLAGS =  -std=c++11 -O3
 LIBS =
 
-TARGETS = P2P_Send_Multi_MPIs P2P_Send_Multi_OpenMP \
-					Scatter_Multi_MPIs Scatter_Multi_OpenMP \
-					Broadcast_Multi_MPIs Broadcast_Multi_OpenMP
+TARGETS = P2P_MPI P2P_OpenMP \
+					Scatter_MPI Scatter_OpenMP \
+					Broadcast_MPI Broadcast_OpenMP
 
 
 all:	$(TARGETS)
 
 # Create Binary Files
 
-P2P_Send_Multi_MPIs: P2P_Send_Multi_MPIs.o
+P2P_MPI: P2P_Send_Multi_MPIs.o
 	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) P2P_Send_Multi_MPIs.o
 
-P2P_Send_Multi_OpenMP: P2P_Send_Multi_OpenMP.o
+P2P_OpenMP: P2P_Send_Multi_OpenMP.o
 	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) P2P_Send_Multi_OpenMP.o
 
-Scatter_Multi_MPIs: Scatter_Multi_MPIs.o
+Scatter_MPI: Scatter_Multi_MPIs.o
 	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) Scatter_Multi_MPIs.o
 
-Scatter_Multi_OpenMP: Scatter_Multi_OpenMP.o
+Scatter_OpenMP: Scatter_Multi_OpenMP.o
 	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) Scatter_Multi_OpenMP.o
 
-Broadcast_Multi_MPIs: Broadcast_Multi_MPIs.o
+Broadcast_MPI: Broadcast_Multi_MPIs.o
 	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) Broadcast_Multi_MPIs.o
 
-Broadcast_Multi_OpenMP: Broadcast_Multi_OpenMP.o
+Broadcast_OpenMP: Broadcast_Multi_OpenMP.o
 	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) Broadcast_Multi_OpenMP.o
 
 

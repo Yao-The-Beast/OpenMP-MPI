@@ -1,0 +1,56 @@
+P2P baseline, ranks/node:32, max msg size:32KB 
+send & recv, 1.907349, 3011.321864
+send & recv, 2.145767, 3717.047053
+send & recv, 3.099442, 8103.870409
+send & recv, 5.006790, 11754.809201
+send & recv, 10.013580, 11228.887794
+send & recv, 26.941299, 8809.771458
+ 
+P2P Hybrid, ranks/node:1 number of threads: 32, max msg size:32KB 
+send, -2051.115036, 35.108065
+send, -2026.081085, 70.036174
+send, -1951.932907, 133.122945
+send, -1942.157745, 240.078439
+send, -1798.868179, 266.504629
+send, -1271.009445, 249.625767
+ 
+P2P Hybrid, ranks/node:2 number of threads: 16, max msg size:32KB 
+send, 25.987625, 196.709108
+send, 33.140182, 373.879121
+send, 46.968460, 576.569982
+send, 73.909760, 787.836239
+send, 155.925751, 777.980641
+send, 371.932983, 664.404202
+ 
+P2P Hybrid, ranks/node:4 number of threads: 8, max msg size:32KB 
+send, 15.020370, 403.684011
+send, 15.020370, 786.980998
+send, 20.980835, 1222.086924
+send, 36.001205, 1598.400039
+send, 77.009201, 1563.152757
+send, 185.966492, 1324.364597
+ 
+P2P Hybrid, ranks/node:8 number of threads: 4, max msg size:32KB 
+send, 8.106232, 731.441633
+send, 7.867813, 1385.632855
+send, 9.775162, 2430.238552
+send, 16.212463, 3261.836326
+send, 36.001205, 3244.292192
+send, 96.797943, 2523.137309
+ 
+P2P Hybrid, ranks/node:16 number of threads: 2, max msg size:32KB 
+send, 4.053116, 951.004464
+send, 5.006790, 2081.512349
+send, 6.914139, 3623.436005
+send, 7.152557, 6006.855970
+send, 17.881393, 6316.327170
+send, 46.014786, 5132.329620
+ 
+P2P Hybrid, ranks/node:32 number of threads: 1, max msg size:32KB 
+send, 1.907349, 1993.187348
+send, 2.145767, 5223.656942
+send, 3.099442, 7606.755267
+send, 5.006790, 11311.401843
+send, 10.967255, 10541.927389
+send, 27.894974, 8855.752486
+ 

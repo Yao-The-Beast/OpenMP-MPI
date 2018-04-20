@@ -51,67 +51,11 @@ void busy_send_recv_sync_routine(int hisAddress, int myAddress, bool isVerbose, 
       end_timestamp = MPI_Wtime();
       Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
         latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0, sizeof(double) * NUM_MESSAGE_PER_OPERATION * MESSAGE_SIZE, 1, false);
-      printf("-----------------------------------------\n");
-      printf("Sync Send & Recv Latency Stats are: \n");
+      latency_stats_in_microsecond.description = "send";
       latency_stats_in_microsecond.print();
       //latency_stats_in_microsecond.write_to_csv_file("Output/twoSidedSleepSend_Multi_OpenMP_Sync_" + to_string(world_size * NUM_THREADS) + ".txt");
     }
 }
-
-/* ----------- ASYNCHRONOUS ---------- */
-void busy_send_recv_async_routine(int hisAddress, int myAddress, bool isVerbose, int world_size){
-    //timestamp
-    double mySent[NUM_MESSAGE_PER_OPERATION * MESSAGE_SIZE];
-    double hisSent[NUM_MESSAGE_PER_OPERATION * MESSAGE_SIZE];
-
-    MPI_Request sendRequest;
-    MPI_Request recvRequest;
-
-    vector<double> latencies;
-    double recv;
-    double start_timestamp, end_timestamp;
-    int tag = BUSY_SEND_RECV_TAG * 100 + omp_get_thread_num();
-
-    start_timestamp = MPI_Wtime();
-
-    for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
-
-      if (myAddress % 2 == 1){
-        mySent[10] = MPI_Wtime();
-        MPI_Isend(&mySent, NUM_MESSAGE_PER_OPERATION, dt, hisAddress, tag, MPI_COMM_WORLD, &sendRequest);
-      }else{
-        MPI_Irecv(&hisSent, NUM_MESSAGE_PER_OPERATION, dt, hisAddress, tag, MPI_COMM_WORLD, &recvRequest);
-      }
-
-      ////USLEEP to simulate work here
-      //USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
-
-      //Wait for the request to finish
-      if (myAddress % 2 == 1){
-        MPI_Waitall(1, &sendRequest, MPI_STATUSES_IGNORE);
-      }else{
-        MPI_Waitall(1, &recvRequest, MPI_STATUSES_IGNORE);
-      }
-      //Calculate the time
-      if (isVerbose){
-        recv = MPI_Wtime();
-        latencies.push_back((recv - hisSent[10]));
-      }
-    }
-
-    if (isVerbose){
-      end_timestamp = MPI_Wtime();
-      //Need to take care of two way communication
-      //So we multiply the each message size by 2
-      Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
-        latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0, sizeof(double) * NUM_MESSAGE_PER_OPERATION * MESSAGE_SIZE, 1, false);
-      printf("-----------------------------------------\n");
-      printf("Async Send & Recv Latency Stats are: \n");
-      latency_stats_in_microsecond.print();
-      //latency_stats_in_microsecond.write_to_csv_file("Output/twoSidedSleepSend_Multi_OpenMP_Async_" + to_string(world_size * NUM_THREADS) + ".txt");
-    }
-}
-
 
 
 int main(int argc, char** argv) {
@@ -185,14 +129,6 @@ int main(int argc, char** argv) {
     }else{
       busy_send_recv_sync_routine(world_rank - 1, world_rank, verboser_rank == world_rank && verboser_thread == tid, world_size);
     }
-
-    // //Use Isend & Irecv
-    // if (world_rank % 2 == 0){
-    //   busy_send_recv_async_routine(world_rank + 1, world_rank, verboser_rank == world_rank && verboser_thread == tid, world_size);
-    // }else{
-    //   busy_send_recv_async_routine(world_rank - 1, world_rank, verboser_rank == world_rank && verboser_thread == tid, world_size);
-    // }
-
 
   }
 
