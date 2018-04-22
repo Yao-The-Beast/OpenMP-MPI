@@ -1,0 +1,43 @@
+CS267 Paper Structure
+1. Abstract
+    1. Show the constraints of naive hybrid models
+    2. Show how our mailbox model manage to improve the collective functions performance
+2. Introduction
+3. Background
+    1. MPI Operations
+        1. Send
+        2. Scatter
+        3. Broadcast
+        4. Gather
+    2. MPI Multithread Models
+    3. OpenMP
+4. Naive Hybrid Model (MPI with OpenMP)
+    1. Hard to combine
+    2. Low performance (show the P2P results)
+    3. Collective functions cannot be used
+5. Mailbox Solution
+    1. Motivation & high level overview
+    2. Algorithm description
+    3. Expectation
+    4. Easy to use interface (similar to the native MPI function calls)
+6. Experiments Results
+    1. Environment description
+        1. Haswell & KNL specification
+    2. P2P
+        1. Overview: Really bad performance in terms of scaling
+        2. KNL & Haswell has basically the same throughput
+        3. Haswell has larger throughput
+    3. Scatter
+        1. Overview: Naive bad, mailbox much better
+        2. When the message size becomes larger, our mailbox loses advantages
+        3. The level of thread parallelization goes down, the performance is better as expected
+        4. Haswell has larger throughput
+    4. Broadcast
+        1. Our mailbox is really ineffective (yet still better than vanilla)
+        2. MPI broadcast is highly efficient
+        3. Haswell has larger throughput
+    5. Gather
+        1. xxxx
+        2. xxxx
+        3. xxxxx
+
