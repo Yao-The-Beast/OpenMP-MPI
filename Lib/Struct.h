@@ -23,6 +23,8 @@
 #include <mutex>
 #include <queue>
 #include <cstring>
+#include <sched.h>
+#include <assert.h>
 
 using namespace std;
 
@@ -92,7 +94,7 @@ struct MailBox{
 
     //cpy the data into the recvBuffer
     vector<double>& tempMail = mail.first;
-    memcpy(recvBuffer, &tempMail[0], tempMail.size());
+    memcpy(recvBuffer, &tempMail[0], tempMail.size() * sizeof(double));
 
     return mail.second;
   }

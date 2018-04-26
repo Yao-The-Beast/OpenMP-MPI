@@ -208,17 +208,33 @@ int main(int argc, char** argv) {
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    #pragma omp parallel
+    int inum, err, cpu;
+    cpu_set_t cpu_mask;    
+    #pragma omp parallel private(inum, cpu_mask, err, cpu)
     {
+      inum = omp_get_thread_num() + NUM_THREADS * world_rank;
+      CPU_ZERO(     &cpu_mask);           
+      CPU_SET(inum, &cpu_mask);           
+      err = sched_setaffinity((pid_t)0, sizeof(cpu_mask), &cpu_mask );
+      cpu = sched_getcpu();     
       int tid = omp_get_thread_num();
+      #pragma omp barrier
+
       broadcast_async_regular_routine(world_rank, tid, tid == verboser_thread && world_rank == verboser_rank);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    #pragma omp parallel
+    #pragma omp parallel private(inum, cpu_mask, err, cpu)
     {
+      inum = omp_get_thread_num() + NUM_THREADS * world_rank;
+      CPU_ZERO(     &cpu_mask);           
+      CPU_SET(inum, &cpu_mask);           
+      err = sched_setaffinity((pid_t)0, sizeof(cpu_mask), &cpu_mask );
+      cpu = sched_getcpu();     
       int tid = omp_get_thread_num();
+      #pragma omp barrier  
+
       broadcast_async_self_invented_routine(world_rank, tid, tid == verboser_thread && world_rank == verboser_rank);
     }
 

@@ -112,16 +112,19 @@ int main(int argc, char** argv) {
 
   omp_set_num_threads(NUM_THREADS);
 
-  #pragma omp parallel
+  int inum, err, cpu;
+  cpu_set_t cpu_mask;                    
+  #pragma omp parallel private(inum, cpu_mask, err, cpu)
   {
+    inum = omp_get_thread_num() + NUM_THREADS * world_rank;
+    CPU_ZERO(     &cpu_mask);           
+    CPU_SET(inum, &cpu_mask);           
+    err = sched_setaffinity((pid_t)0, sizeof(cpu_mask), &cpu_mask );
+    cpu = sched_getcpu();     
+              
     int tid = omp_get_thread_num();
 
-    //Use Send & Recv
-    if (world_rank % 2 == 0){
-      busy_send_recv_sync_routine(world_rank + 1, world_rank, false, world_size);
-    }else{
-      busy_send_recv_sync_routine(world_rank - 1, world_rank, false, world_size);
-    }
+    #pragma omp barrier
 
     //Use Send & Recv
     if (world_rank % 2 == 0){

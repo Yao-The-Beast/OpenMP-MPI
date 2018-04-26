@@ -41,7 +41,7 @@ void scatter_async_regular_routine(int my_rank, int my_tid, bool isVerbose){
     for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
       //Prepare the data
       for (int j = 0; j < WORLD_SIZE * NUM_THREADS; j++){
-        sendBuffer[j * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION + 10] = MPI_Wtime();
+        sendBuffer[j * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION + 1023] = MPI_Wtime();
       }
       //Send to everyone
       int counter = 0;
@@ -69,7 +69,7 @@ void scatter_async_regular_routine(int my_rank, int my_tid, bool isVerbose){
       //Calculate the latency
       if (isVerbose){
         double recv = MPI_Wtime();
-        latencies.push_back((recv - recvBuffer[10]));
+        latencies.push_back((recv - recvBuffer[1023]));
       }
     }
   }
@@ -104,7 +104,7 @@ void scatter_async_self_invented_routine(int my_rank, int my_tid, bool isVerbose
     if (my_rank == MASTER_RANK && my_tid == MASTER_TID){
       //Prepare the data
       for (int j = 0; j < WORLD_SIZE * NUM_THREADS; j++){
-        sendBuffer[j * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION + 10] = MPI_Wtime();
+        sendBuffer[j * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION + 1023] = MPI_Wtime();
       }
     }
     //Call the scatter function, option set to send
@@ -135,7 +135,7 @@ void scatter_async_self_invented_routine(int my_rank, int my_tid, bool isVerbose
     //Calculate the latency
     if (isVerbose){
       double recv = MPI_Wtime();
-      latencies.push_back((recv - recvBuffer[10]));
+      latencies.push_back((recv - recvBuffer[1023]));
     }
   }
 
@@ -211,17 +211,35 @@ int main(int argc, char** argv) {
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    #pragma omp parallel
+    int inum, err, cpu;
+    cpu_set_t cpu_mask;                    
+    #pragma omp parallel private(inum, cpu_mask, err, cpu)
     {
+      inum = omp_get_thread_num() + NUM_THREADS * world_rank;
+      CPU_ZERO(     &cpu_mask);           
+      CPU_SET(inum, &cpu_mask);           
+      err = sched_setaffinity((pid_t)0, sizeof(cpu_mask), &cpu_mask );
+      cpu = sched_getcpu();     
+
       int tid = omp_get_thread_num();
+
+      #pragma omp barrier
       scatter_async_regular_routine(world_rank, tid, tid == verboser_thread && world_rank == verboser_rank);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    #pragma omp parallel
+    #pragma omp parallel private(inum, cpu_mask, err, cpu)
     {
+      inum = omp_get_thread_num() + NUM_THREADS * world_rank;
+      CPU_ZERO(     &cpu_mask);           
+      CPU_SET(inum, &cpu_mask);           
+      err = sched_setaffinity((pid_t)0, sizeof(cpu_mask), &cpu_mask );
+      cpu = sched_getcpu();     
+      
       int tid = omp_get_thread_num();
+
+      #pragma omp barrier
       scatter_async_self_invented_routine(world_rank, tid, tid == verboser_thread && world_rank == verboser_rank);
     }
 
