@@ -25,6 +25,7 @@
 #include <cstring>
 #include <sched.h>
 #include <assert.h>
+#include <list>
 
 using namespace std;
 

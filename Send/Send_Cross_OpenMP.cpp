@@ -1,9 +1,6 @@
 #include "../Lib/Lib.h"
 
-#define NUM_ACTUAL_MESSAGES 2500
-#define NUM_WARMUP_MESSAGES 10000
-#define BUSY_SEND_RECV_TAG 2
-
+#define NUM_ACTUAL_MESSAGES 5000
 using namespace std;
 
 const int THREAD_LEVEL = MPI_THREAD_MULTIPLE;
@@ -16,14 +13,14 @@ int SLEEP_FLUCTUATION = 0;
 MPI_Datatype dt;
 
 
-Bins bins;
+Bins* bins;
 
 void master_send_rountine(){
-    bins.busySend(MESSAGE_SIZE, NUM_MESSAGE_PER_OPERATION, dt, NUM_ACTUAL_MESSAGES * NUM_THREADS);
+  bins->busySend(MESSAGE_SIZE, NUM_MESSAGE_PER_OPERATION, dt, NUM_ACTUAL_MESSAGES * (NUM_THREADS-2));
 }
 
 void master_recv_rountine(){
-    bins.busyRecv(MESSAGE_SIZE, NUM_MESSAGE_PER_OPERATION, dt, NUM_ACTUAL_MESSAGES * NUM_THREADS);
+  bins->busyRecv(MESSAGE_SIZE, NUM_MESSAGE_PER_OPERATION, dt, NUM_ACTUAL_MESSAGES * (NUM_THREADS-2));
 }
 
 void send_routine(int my_rank, int world_size, bool isVerbose){
@@ -35,12 +32,13 @@ void send_routine(int my_rank, int world_size, bool isVerbose){
   int to_rank = -1; int to_tid = -1;
 
   for (int i = 0; i < NUM_ACTUAL_MESSAGES; i++){
-    sendBuffer[1023] = MPI_Wtime();
 
-    to_rank = my_rank;
-    to_tid = my_tid+1;
+    sendBuffer[i % MESSAGE_SIZE] = MPI_Wtime();
 
-    bins.sendDatagram(sendBuffer, MESSAGE_SIZE, NUM_MESSAGE_PER_OPERATION, 
+    to_rank = my_rank+1;
+    to_tid = my_tid;
+
+    bins->sendDatagram(&sendBuffer, MESSAGE_SIZE, NUM_MESSAGE_PER_OPERATION, 
         my_rank, my_tid, to_rank, to_tid, tag);
   }
 }
@@ -59,22 +57,23 @@ void recv_routine(int my_rank, int world_size, bool isVerbose){
 
   for (int i = 0; i < NUM_ACTUAL_MESSAGES; i++){
 
-    from_rank = my_rank;
-    from_tid = my_tid - 1;
+    from_rank = my_rank-1;
+    from_tid = my_tid;
 
-    bins.recvDatagram(&recvBuffer[0], MESSAGE_SIZE, NUM_MESSAGE_PER_OPERATION,
+    bins->recvDatagram(&recvBuffer[0], MESSAGE_SIZE, NUM_MESSAGE_PER_OPERATION,
       from_rank, from_tid, my_rank, my_tid, tag);
     if (isVerbose){
-      latencies.push_back(MPI_Wtime() - recvBuffer[1023]);
+      latencies.push_back(MPI_Wtime() - recvBuffer[i % MESSAGE_SIZE]);
     }
   }
+
 
   if (isVerbose){
     double end_timestamp = MPI_Wtime();
     Stats latency_stats_in_microsecond = CALCULATE_TIMESTAMP_STATS_BATCH_WITH_SLEEP(
       latencies, start_timestamp, end_timestamp, SLEEP_BASE + SLEEP_FLUCTUATION / 2.0,
       sizeof(double) * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 1, false);
-    latency_stats_in_microsecond.description = "SuperSend";
+    latency_stats_in_microsecond.description = "SuperSendRemote";
     latency_stats_in_microsecond.print();
   }
 
@@ -123,17 +122,20 @@ int main(int argc, char** argv) {
   // Create datatype
   CREATE_CONTIGUOUS_DATATYPE(dt);
 
-  int verboser_thread = GENERATE_A_RANDOM_NUMBER(2, NUM_THREADS - 1, -1);
+  int verboser_thread = GENERATE_A_RANDOM_NUMBER(2, NUM_THREADS - 1);
   int verboser_rank = GENERATE_A_RANDOM_NUMBER(0,world_size - 1, 0);
+  verboser_rank = 1;
+  verboser_thread = 3;
 
   //initialize bin here
-  bins = Bins(world_size, world_rank);
+  bins = new Bins(NUM_THREADS, world_rank);
 
   omp_set_num_threads(NUM_THREADS);
 
   int inum, err, cpu;
-  cpu_set_t cpu_mask;                    
-  #pragma omp parallel private(inum, cpu_mask, err, cpu)
+  cpu_set_t cpu_mask;        
+
+  #pragma omp parallel shared(bins) private(inum, cpu_mask, err, cpu)
   {
     inum = omp_get_thread_num() + NUM_THREADS * world_rank;
     CPU_ZERO(     &cpu_mask);           
@@ -145,17 +147,24 @@ int main(int argc, char** argv) {
 
     #pragma omp barrier
 
-    if (tid == 0){
-      master_send_rountine();
-    }else if (tid == 1){
-      master_recv_rountine();
-    }else if (tid % 2 == 0){
-      send_routine(world_rank, world_size, world_rank == verboser_rank && tid == verboser_thread);
+    if (world_rank % 2 == 0){
+      if (tid == 0){
+        master_send_rountine();
+      }else if (tid == 1){
+      }else{
+        send_routine(world_rank, world_size, world_rank == verboser_rank && tid == verboser_thread);
+      }
     }else{
-      recv_routine(world_rank, world_size, world_rank == verboser_rank && tid == verboser_thread);
+      if (tid == 0){
+      }else if (tid == 1){
+        master_recv_rountine();
+      }else{
+        recv_routine(world_rank, world_size, world_rank == verboser_rank && tid == verboser_thread);
+      }
     }
-
   }
+
+  delete(bins);
 
   MPI_Finalize();
 }

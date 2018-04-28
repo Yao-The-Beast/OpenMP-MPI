@@ -12,7 +12,7 @@ LIBS =
 TARGETS = P2P_MPI P2P_OpenMP \
 					Scatter_MPI Scatter_OpenMP \
 					Broadcast_MPI Broadcast_OpenMP \
-					Send_OpenMP
+					Send_Cross_OpenMP Send_Local_OpenMP Send_MPI
 
 
 all:	$(TARGETS)
@@ -37,8 +37,14 @@ Broadcast_MPI: Broadcast_Multi_MPIs.o
 Broadcast_OpenMP: Broadcast_Multi_OpenMP.o
 	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) Broadcast_Multi_OpenMP.o
 
-Send_OpenMP: Send_OpenMP.o
-	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) Send_OpenMP.o
+Send_Cross_OpenMP: Send_Cross_OpenMP.o
+	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) Send_Cross_OpenMP.o
+
+Send_Local_OpenMP: Send_Local_OpenMP.o
+	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) Send_Local_OpenMP.o
+
+Send_MPI: Send_MPI.o
+	$(MPCC) -o $@ $(LIBS) $(MPILIBS) $(OPENMP) Send_MPI.o
 
 # Create Object Files
 
@@ -60,8 +66,14 @@ Broadcast_Multi_MPIs.o: Broadcast/Broadcast_Multi_MPIs.cpp Lib/Lib.h
 Broadcast_Multi_OpenMP.o: Broadcast/Broadcast_Multi_OpenMP.cpp Lib/Lib.h
 	$(MPCC) -c $(CFLAGS) $(OPENMP) Broadcast/Broadcast_Multi_OpenMP.cpp Lib/Lib.h
 
-Send_OpenMP.o: Send/Send_OpenMP.cpp Lib/Lib.h
-	$(MPCC) -c $(CFLAGS) $(OPENMP) Send/Send_OpenMP.cpp Lib/Lib.h
+Send_Local_OpenMP.o: Send/Send_Local_OpenMP.cpp Lib/Lib.h
+	$(MPCC) -c $(CFLAGS) $(OPENMP) Send/Send_Local_OpenMP.cpp Lib/Lib.h
+
+Send_Cross_OpenMP.o: Send/Send_Cross_OpenMP.cpp Lib/Lib.h
+	$(MPCC) -c $(CFLAGS) $(OPENMP) Send/Send_Cross_OpenMP.cpp Lib/Lib.h
+
+Send_MPI.o: Send/Send_MPI.cpp Lib/Lib.h
+	$(MPCC) -c $(CFLAGS) $(OPENMP) Send/Send_MPI.cpp Lib/Lib.h
 
 clean:
 	rm -f *.o $(TARGETS) *.stdout *.error *.txt
