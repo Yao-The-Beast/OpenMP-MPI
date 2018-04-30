@@ -1,0 +1,43 @@
+#!/bin/bash -l 
+#SBATCH -C haswell
+#SBATCH -p debug 
+#SBATCH -N 2 
+#SBATCH -t 00:30:00 
+#SBATCH -J SendCross-haswell
+#SBATCH -o SendCross-haswell.%j.stdout 
+#SBATCH -e SendCross-haswell.%j.error 
+export OMP_PROC_BIND=true 
+export OMP_PLACES=threads 
+export MPICH_MAX_THREAD_SAFETY=MPI_THREAD_MULTIPLE 
+export OMP_NUM_THREADS=64 
+
+echo "MPI Send baseline, ranks/node:32, max msg size:64KB " 
+srun -N 2 -n 64 -c 1 --cpu_bind=cores ./P2P_MPI -B 0 -F 0 -N 1
+srun -N 2 -n 64 -c 1 --cpu_bind=cores ./P2P_MPI -B 0 -F 0 -N 2
+srun -N 2 -n 64 -c 1 --cpu_bind=cores ./P2P_MPI -B 0 -F 0 -N 4
+srun -N 2 -n 64 -c 1 --cpu_bind=cores ./P2P_MPI -B 0 -F 0 -N 8
+srun -N 2 -n 64 -c 1 --cpu_bind=cores ./P2P_MPI -B 0 -F 0 -N 16
+srun -N 2 -n 64 -c 1 --cpu_bind=cores ./P2P_MPI -B 0 -F 0 -N 32
+srun -N 2 -n 64 -c 1 --cpu_bind=cores ./P2P_MPI -B 0 -F 0 -N 64
+echo " " 
+
+echo "Hybrid Send, ranks/node:1 number of threads: 32, max msg size:64KB " 
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 32 -N 1
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 32 -N 2
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 32 -N 4
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 32 -N 8
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 32 -N 16
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 32 -N 32
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./P2P_OpenMP -B 0 -F 0 -T 32 -N 64
+echo " " 
+
+echo "Super Send, ranks/node:1 number of threads: 32, max msg size:64KB " 
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./Send_Cross_OpenMP -B 0 -F 0 -T 32 -N 1
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./Send_Cross_OpenMP -B 0 -F 0 -T 32 -N 2
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./Send_Cross_OpenMP -B 0 -F 0 -T 32 -N 4
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./Send_Cross_OpenMP -B 0 -F 0 -T 32 -N 8
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./Send_Cross_OpenMP -B 0 -F 0 -T 32 -N 16
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./Send_Cross_OpenMP -B 0 -F 0 -T 32 -N 32
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./Send_Cross_OpenMP -B 0 -F 0 -T 32 -N 64
+echo " " 
+

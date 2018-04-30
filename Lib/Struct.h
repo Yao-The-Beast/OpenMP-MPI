@@ -25,6 +25,7 @@
 #include <cstring>
 #include <sched.h>
 #include <assert.h>
+#include <atomic>
 #include <list>
 
 using namespace std;
@@ -70,57 +71,77 @@ struct Stats{
   }
 };
 
-//A componenet of MailRoom data structure
-struct MailBox{
-  //< data, <sender_rank, sender_tid> >
-  queue<pair<vector<double>, pair<int, int>>> mails;
+struct MasterBuffer{
+  MasterBuffer(){};
+
+  vector<double> data;
+  vector<bool> canPull;
+  atomic<int> counter = 0;
+
+  int message_size;
+  int num_messages_per_operation;
+  int num_workers;
+
   mutex key;
   condition_variable listener;
+  condition_variable counterListener;
 
-  MailBox(){}
+  MasterBuffer(int message_size, int num_messages_per_operation, int num_workers){
+    this->message_size = message_size;
+    this->num_messages_per_operation = num_messages_per_operation;
+    this->num_workers = num_workers;
+    canPull = vector<bool>(num_workers, false);
+  }
 
-  void putMail(vector<double> mail, int sender_rank, int sender_tid){
+  double* getData(){
+    return &data[0];
+  }
+
+  void setBuffer(int message_size, int num_messages_per_operation, int num_workers, int num_ranks){
+    data = std::vector<double>(message_size * num_messages_per_operation * num_workers * num_ranks, 0);
+  }
+
+  void is_safe_to_replace_buffer(){
     unique_lock<mutex> lock(key);
-    mails.push(make_pair(mail, make_pair(sender_rank, sender_tid)));
-    listener.notify_one();
+    while (counter.load(std::memory_order_relaxed) != 0){
+      counterListener.wait(lock);
+    }
   }
-
-  //Get the first mail
-  //Blocked until the mailbox is not empty
-  pair<int, int> fetchMail(double* recvBuffer){
+  
+  void reset(){
     unique_lock<mutex> lock(key);
-    listener.wait(lock, [=]{ return !mails.empty(); });
-    auto mail = mails.front();
-    mails.pop();
-
-    //cpy the data into the recvBuffer
-    vector<double>& tempMail = mail.first;
-    memcpy(recvBuffer, &tempMail[0], tempMail.size() * sizeof(double));
-
-    return mail.second;
-  }
-};
-
-//The shared data structure we use
-struct MailRoom{
-  map<string, vector<MailBox>> categories;
-
-  MailRoom(){};
-
-  MailRoom(int numMailBoxes){
-    categories["BROADCAST"] = vector<MailBox>(numMailBoxes);
-    categories["SCATTER"] = vector<MailBox>(numMailBoxes);
-    categories["GATHER"] = vector<MailBox>(numMailBoxes);
+    counter.store(num_workers, std::memory_order_relaxed);
+    canPull = std::vector<bool>(num_workers, true);
+    listener.notify_all();
   }
 
-  void putMail(vector<double>* mail, int whichMailBox, int sender_rank, int sender_tid, string operation){
-    categories[operation][whichMailBox].putMail(*mail, sender_rank, sender_tid);
+  void canFetch(int tid){
+    unique_lock<mutex> lock(key);
+    listener.wait(lock, [=]{ return canPull[tid]; });
   }
 
-  //Return <sender_rank, sender_tid>
-  pair<int, int> fetchMail(int whichMailBox, double* recvBuffer, string operation){
-    return categories[operation][whichMailBox].fetchMail(recvBuffer);
+  void fetchDataScatter(double* recvBuffer, int tid){
+    canFetch(tid);
+    memcpy(recvBuffer, &data[0] + tid * message_size * num_messages_per_operation, message_size * num_messages_per_operation * sizeof(double));
+    
+    unique_lock<mutex> lock(key);
+    canPull[tid] = false;
+    if (1 == counter.fetch_sub(1, memory_order_relaxed)){
+      counterListener.notify_one();
+    }
   }
+
+  void fetchDataBroadcast(double* recvBuffer, int tid){
+    canFetch(tid);
+    memcpy(recvBuffer, &data[0] , message_size * num_messages_per_operation * sizeof(double));
+    
+    unique_lock<mutex> lock(key);
+    canPull[tid] = false;
+    if (1 == counter.fetch_sub(1, memory_order_relaxed)){
+      counterListener.notify_one();
+    }
+  }
+
 };
 
 #endif

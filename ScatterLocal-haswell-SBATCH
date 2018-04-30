@@ -1,0 +1,31 @@
+#!/bin/bash -l 
+#SBATCH -C haswell
+#SBATCH -p debug 
+#SBATCH -N 1
+#SBATCH -t 00:30:00 
+#SBATCH -J ScatterLocal-haswell
+#SBATCH -o ScatterLocal-haswell.%j.stdout 
+#SBATCH -e ScatterLocal-haswell.%j.error 
+export OMP_PROC_BIND=true 
+export OMP_PLACES=threads 
+export MPICH_MAX_THREAD_SAFETY=MPI_THREAD_MULTIPLE 
+export OMP_NUM_THREADS=64 
+
+echo "Scatter baseline, ranks/node:64, max msg size:32KB " 
+srun -N 1 -n 64 -c 1 --cpu_bind=cores ./Scatter_MPI -B 0 -F 0 -N 1
+srun -N 1 -n 64 -c 1 --cpu_bind=cores ./Scatter_MPI -B 0 -F 0 -N 2
+srun -N 1 -n 64 -c 1 --cpu_bind=cores ./Scatter_MPI -B 0 -F 0 -N 4
+srun -N 1 -n 64 -c 1 --cpu_bind=cores ./Scatter_MPI -B 0 -F 0 -N 8
+srun -N 1 -n 64 -c 1 --cpu_bind=cores ./Scatter_MPI -B 0 -F 0 -N 16
+srun -N 1 -n 64 -c 1 --cpu_bind=cores ./Scatter_MPI -B 0 -F 0 -N 32
+echo " " 
+
+
+echo "Scatter Hybrid, ranks/node:1 number of threads: 64, max msg size:32KB " 
+srun -N 1 -n 1 -c 64 --cpu_bind=cores ./Scatter_OpenMP -B 0 -F 0 -T 64 -N 1
+srun -N 1 -n 1 -c 64 --cpu_bind=cores ./Scatter_OpenMP -B 0 -F 0 -T 64 -N 2
+srun -N 1 -n 1 -c 64 --cpu_bind=cores ./Scatter_OpenMP -B 0 -F 0 -T 64 -N 4
+srun -N 1 -n 1 -c 64 --cpu_bind=cores ./Scatter_OpenMP -B 0 -F 0 -T 64 -N 8
+srun -N 1 -n 1 -c 64 --cpu_bind=cores ./Scatter_OpenMP -B 0 -F 0 -T 64 -N 16
+srun -N 1 -n 1 -c 64 --cpu_bind=cores ./Scatter_OpenMP -B 0 -F 0 -T 64 -N 32
+echo " " 

@@ -1,0 +1,26 @@
+MPI Send baseline, ranks/node:16, max msg size:64KB
+send & recv, 1.907349, 2760.805460
+send & recv, 2.145767, 3642.021962
+send & recv, 3.099442, 7666.463900
+send & recv, 5.006790, 11701.916810
+send & recv, 10.013580, 10795.015607
+send & recv, 27.894974, 8430.558459
+send & recv, 52.928925, 9115.967392
+
+Hybrid Send, ranks/node:1 number of threads: 32, max msg size:64KB
+send, 792.026520, 35.025686
+send, 826.835632, 66.405837
+send, 895.023346, 128.231543
+send, 887.870789, 241.200600
+send, 1067.876816, 264.779349
+send, 1540.899277, 263.883480
+send, 2482.891083, 266.709229
+
+Super Send, ranks/node:1 number of threads: 32, max msg size:64KB
+SuperSendRemote, 1025.199890, 28.292446
+SuperSendRemote, 1421.928406, 43.745524
+SuperSendRemote, 2385.139465, 60.868053
+SuperSendRemote, 6299.018860, 53.693318
+SuperSendRemote, 11338.949203, 62.529233
+SuperSendRemote, 21973.133087, 66.363074
+SuperSendRemote, 41587.114334, 71.313272

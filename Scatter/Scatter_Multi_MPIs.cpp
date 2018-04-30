@@ -207,12 +207,6 @@ int main(int argc, char** argv) {
   int world_size;
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-  // We are assuming at least 2 and even amount of processes for this task
-  if (world_size < 2 ) {
-    fprintf(stderr, "World size must be greater than 1 for %s\n", argv[0]);
-    MPI_Abort(MPI_COMM_WORLD, 1);
-  }
-
   //Create dt datatype
   CREATE_CONTIGUOUS_DATATYPE(dt);
 
@@ -225,9 +219,9 @@ int main(int argc, char** argv) {
   busy_scatter_sync_routine(world_rank, verboser == world_rank, world_size);
   MPI_Barrier(MPI_COMM_WORLD);
 
-  //Use Isend instead of Iscatter
-  busy_scatter_async_isend_routine(world_rank, verboser == world_rank, world_size);
-  MPI_Barrier(MPI_COMM_WORLD);
+  // //Use Isend instead of Iscatter
+  // busy_scatter_async_isend_routine(world_rank, verboser == world_rank, world_size);
+  // MPI_Barrier(MPI_COMM_WORLD);
 
   MPI_Finalize();
 }

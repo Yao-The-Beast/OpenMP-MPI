@@ -1,6 +1,9 @@
+#ifndef MESSAGE_H
+#define MESSAGE_H
+
 #include "Struct.h"
 
-#define OUTBOUND_BIN_CAPACITY 25
+#define OUTBOUND_BIN_CAPACITY 5
 #define INBOUND_BIN_CAPACITY 3
 
 struct DatagramMeta{
@@ -278,7 +281,6 @@ struct Bins{
 				}
 			}
 		}
-		//cout << "BusySend Done" << endl;
 	}
 
 	//Master function
@@ -288,16 +290,10 @@ struct Bins{
 		vector<double> recvBuffer(message_size * message_num, 0);
 		MPI_Status status;
 		while (counter < goal){
-			//cout << "Busy recv " << counter << endl;;
-
 			MPI_Recv(&recvBuffer[0], message_num, dt, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-			//cout << "Get " << counter << endl;
-
 			int tag = status.MPI_TAG;
 			int from_rank = status.MPI_SOURCE;
-			DatagramMeta meta(from_rank, EXTRACT_FROM_TID(tag), world_rank, EXTRACT_TO_TID(tag), EXTRACT_TAG(tag));
-			//cout << meta.from_tid << " " << meta.to_tid << " " << meta.tag << endl;
-			
+			DatagramMeta meta(from_rank, EXTRACT_FROM_TID(tag), world_rank, EXTRACT_TO_TID(tag), EXTRACT_TAG(tag));			
 			//put into the correct bin
 			Bin* thisInboundBin = inbound_bins[meta.to_tid];
 			thisInboundBin->putDatagram(&recvBuffer, message_size, message_num,
@@ -305,12 +301,11 @@ struct Bins{
 
 			counter++;
 		}
-		//cout << "BusyRecv Done" << endl;
  	}
 };
 
 
-
+#endif
 
 
 

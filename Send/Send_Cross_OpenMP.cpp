@@ -27,12 +27,12 @@ void send_routine(int my_rank, int world_size, bool isVerbose){
 
   int my_tid = omp_get_thread_num();
 
-  vector<double> sendBuffer(NUM_MESSAGE_PER_OPERATION * MESSAGE_SIZE, 0);
+  
   int tag = 1; 
   int to_rank = -1; int to_tid = -1;
 
   for (int i = 0; i < NUM_ACTUAL_MESSAGES; i++){
-
+    vector<double> sendBuffer(NUM_MESSAGE_PER_OPERATION * MESSAGE_SIZE, 0);
     sendBuffer[i % MESSAGE_SIZE] = MPI_Wtime();
 
     to_rank = my_rank+1;
@@ -163,6 +163,7 @@ int main(int argc, char** argv) {
       }
     }
   }
+  MPI_Barrier(MPI_COMM_WORLD);
 
   delete(bins);
 

@@ -21,7 +21,7 @@ int WORLD_SIZE = 1;
 
 
 MPI_Datatype dt;
-MailRoom mailRoom;
+MasterBuffer* masterBuffer;
 
 
 
@@ -51,8 +51,6 @@ void scatter_async_regular_routine(int my_rank, int my_tid, bool isVerbose){
         }
       }
       MPI_Irecv(&recvBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER_RANK, my_tid, MPI_COMM_WORLD, &recvRequest);
-      //USLEEP to simulate work here
-      ////USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
       //Wait for the requests
       MPI_Waitall(counter, sendRequests, MPI_STATUSES_IGNORE);
       MPI_Waitall(1, &recvRequest, MPI_STATUSES_IGNORE);
@@ -62,8 +60,6 @@ void scatter_async_regular_routine(int my_rank, int my_tid, bool isVerbose){
     for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
       //Receive the scattered message
       MPI_Irecv(&recvBuffer[0], NUM_MESSAGE_PER_OPERATION, dt, MASTER_RANK, my_tid, MPI_COMM_WORLD, &recvRequest);
-      //USLEEP to simulate work here
-      ////USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
       //Wait for the requests
       MPI_Waitall(1, &recvRequest, MPI_STATUSES_IGNORE);
       //Calculate the latency
@@ -88,18 +84,14 @@ void scatter_async_regular_routine(int my_rank, int my_tid, bool isVerbose){
 //Async using shared data structure MailRoom
 void scatter_async_self_invented_routine(int my_rank, int my_tid, bool isVerbose){
 
-  vector<double> sendBuffer(NUM_MESSAGE_PER_OPERATION * MESSAGE_SIZE * WORLD_SIZE * NUM_THREADS, 0);
+  vector<double>& sendBuffer = masterBuffer->data;
   vector<double> recvBuffer(NUM_MESSAGE_PER_OPERATION * MESSAGE_SIZE, 0);
   vector<double> latencies;
-
-  //Set postman tid
-  int postman_tid = 1;
-  if (NUM_THREADS == 1)
-    postman_tid = 0;
 
   double start_timestamp = MPI_Wtime();
 
   for (uint64_t i = 0; i < NUM_ACTUAL_MESSAGES; i++){
+
     //I am the Master who scatters the messages
     if (my_rank == MASTER_RANK && my_tid == MASTER_TID){
       //Prepare the data
@@ -107,33 +99,28 @@ void scatter_async_self_invented_routine(int my_rank, int my_tid, bool isVerbose
         sendBuffer[j * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION + 1023] = MPI_Wtime();
       }
     }
+
     //Call the scatter function, option set to send
-    SELF_DEFINED_SCATTER(mailRoom,
-      &sendBuffer[0], &recvBuffer[0],
+    SELF_DEFINED_SCATTER(masterBuffer,
+      &recvBuffer[0],
       NUM_MESSAGE_PER_OPERATION, MESSAGE_SIZE, dt,
       my_rank, my_tid,
       MASTER_RANK, MASTER_TID,
-      postman_tid,
       WORLD_SIZE, NUM_THREADS,
       -1
     );
-
-    //Usleep
-    ////USLEEP(SLEEP_BASE, SLEEP_FLUCTUATION);
-
     //Call the scatter function, option set to receive
-    SELF_DEFINED_SCATTER(mailRoom,
-      &sendBuffer[0], &recvBuffer[0],
+    SELF_DEFINED_SCATTER(masterBuffer,
+      &recvBuffer[0],
       NUM_MESSAGE_PER_OPERATION, MESSAGE_SIZE, dt,
       my_rank, my_tid,
       MASTER_RANK, MASTER_TID,
-      postman_tid,
       WORLD_SIZE, NUM_THREADS,
       1
     );
 
     //Calculate the latency
-    if (isVerbose){
+    if (my_tid == 1){
       double recv = MPI_Wtime();
       latencies.push_back((recv - recvBuffer[1023]));
     }
@@ -146,7 +133,6 @@ void scatter_async_self_invented_routine(int my_rank, int my_tid, bool isVerbose
       sizeof(double) * MESSAGE_SIZE * NUM_MESSAGE_PER_OPERATION, 1, false);
     latency_stats_in_microsecond.description = "mailroom";
     latency_stats_in_microsecond.print();
-    //latency_stats_in_microsecond.write_to_csv_file("Output/FanoutSleep_Multi_MPIs_Sync_" + to_string(world_size) + ".txt");
   }
 }
 
@@ -194,8 +180,12 @@ int main(int argc, char** argv) {
     //Create dt datatype
     CREATE_CONTIGUOUS_DATATYPE(dt);
     //Create shared data structure
-    mailRoom = MailRoom(NUM_THREADS);
-
+    masterBuffer = new MasterBuffer(MESSAGE_SIZE, NUM_MESSAGE_PER_OPERATION, NUM_THREADS);
+    if (world_rank == MASTER_RANK){
+      masterBuffer->setBuffer(MESSAGE_SIZE, NUM_MESSAGE_PER_OPERATION, NUM_THREADS, world_size);
+    }else{
+      masterBuffer->setBuffer(MESSAGE_SIZE, NUM_MESSAGE_PER_OPERATION, NUM_THREADS, 1);
+    }
 
     int verboser_thread ;
     if (NUM_THREADS == 1){
@@ -206,6 +196,10 @@ int main(int argc, char** argv) {
     }
 
     int verboser_rank = 1;
+    if (world_size == 1){
+      verboser_rank = 0;
+    }
+
 
     omp_set_num_threads(NUM_THREADS);
 
@@ -243,5 +237,9 @@ int main(int argc, char** argv) {
       scatter_async_self_invented_routine(world_rank, tid, tid == verboser_thread && world_rank == verboser_rank);
     }
 
+
+    delete(masterBuffer);
+
     MPI_Finalize();
+
 }

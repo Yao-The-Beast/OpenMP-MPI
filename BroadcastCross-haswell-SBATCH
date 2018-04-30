@@ -1,0 +1,42 @@
+#!/bin/bash -l 
+#SBATCH -C haswell
+#SBATCH -p debug 
+#SBATCH -N 2 
+#SBATCH -t 00:30:00 
+#SBATCH -J BroadcastCross-haswell
+#SBATCH -o BroadcastCross-haswell.%j.stdout 
+#SBATCH -e BroadcastCross-haswell.%j.error 
+export OMP_PROC_BIND=true 
+export OMP_PLACES=threads 
+export MPICH_MAX_THREAD_SAFETY=MPI_THREAD_MULTIPLE 
+export OMP_NUM_THREADS=64 
+
+echo "Broadcast baseline, ranks/node:32, max msg size:32KB " 
+srun -N 2 -n 64 -c 2 --cpu_bind=cores ./Broadcast_MPI -B 0 -F 0 -N 1
+srun -N 2 -n 64 -c 2 --cpu_bind=cores ./Broadcast_MPI -B 0 -F 0 -N 2
+srun -N 2 -n 64 -c 2 --cpu_bind=cores ./Broadcast_MPI -B 0 -F 0 -N 4
+srun -N 2 -n 64 -c 2 --cpu_bind=cores ./Broadcast_MPI -B 0 -F 0 -N 8
+srun -N 2 -n 64 -c 2 --cpu_bind=cores ./Broadcast_MPI -B 0 -F 0 -N 16
+srun -N 2 -n 64 -c 2 --cpu_bind=cores ./Broadcast_MPI -B 0 -F 0 -N 32
+echo " " 
+
+echo "Broadcast Hybrid, ranks/node:1 number of threads: 32, max msg size:32KB " 
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./Broadcast_OpenMP -B 0 -F 0 -T 32 -N 1
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./Broadcast_OpenMP -B 0 -F 0 -T 32 -N 2
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./Broadcast_OpenMP -B 0 -F 0 -T 32 -N 4
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./Broadcast_OpenMP -B 0 -F 0 -T 32 -N 8
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./Broadcast_OpenMP -B 0 -F 0 -T 32 -N 16
+srun -N 2 -n 2 -c 64 --cpu_bind=cores ./Broadcast_OpenMP -B 0 -F 0 -T 32 -N 32
+echo " " 
+
+echo " " 
+
+echo "Broadcast Hybrid, ranks/node:8 number of threads: 4, max msg size:32KB " 
+srun -N 2 -n 16 -c 8 --cpu_bind=cores ./Broadcast_OpenMP -B 0 -F 0 -T 4 -N 1
+srun -N 2 -n 16 -c 8 --cpu_bind=cores ./Broadcast_OpenMP -B 0 -F 0 -T 4 -N 2
+srun -N 2 -n 16 -c 8 --cpu_bind=cores ./Broadcast_OpenMP -B 0 -F 0 -T 4 -N 4
+srun -N 2 -n 16 -c 8 --cpu_bind=cores ./Broadcast_OpenMP -B 0 -F 0 -T 4 -N 8
+srun -N 2 -n 16 -c 8 --cpu_bind=cores ./Broadcast_OpenMP -B 0 -F 0 -T 4 -N 16
+srun -N 2 -n 16 -c 8 --cpu_bind=cores ./Broadcast_OpenMP -B 0 -F 0 -T 4 -N 32
+echo " " 
+
